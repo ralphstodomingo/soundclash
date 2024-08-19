@@ -15,9 +15,14 @@ const ANIMATION_DURATION = 300;
 export const ActiveGameDisplay = ({ event, activeGame }: Props) => {
   const [isDJ1Animating, setIsDJ1Animating] = useState(false);
   const [isDJ2Animating, setIsDJ2Animating] = useState(false);
+  const [allowVoting, setAllowVoting] = useState(false);
   const activeGameDetails = event.games.find((game) => game.id === activeGame);
 
   const handleDJ1Click = (event: React.MouseEvent<HTMLImageElement>) => {
+    if (!allowVoting) {
+      return;
+    }
+
     setIsDJ1Animating(true);
 
     // Remove the class after the animation completes
@@ -27,6 +32,10 @@ export const ActiveGameDisplay = ({ event, activeGame }: Props) => {
   };
 
   const handleDJ2Click = (event: React.MouseEvent<HTMLImageElement>) => {
+    if (!allowVoting) {
+      return;
+    }
+
     setIsDJ2Animating(true);
 
     // Remove the class after the animation completes
