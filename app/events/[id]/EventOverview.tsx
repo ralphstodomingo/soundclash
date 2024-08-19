@@ -11,7 +11,7 @@ export const EventOverview = ({ event }: Props) => {
   return (
     <div className="container mx-auto p-4 pt-8">
       <Image
-        className="w-full h-48 object-cover rounded-md mb-4"
+        className="w-full max-h-48 object-cover rounded-md mb-4"
         src={logoSrc}
         alt="Soundclash"
       />
