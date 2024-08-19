@@ -58,7 +58,11 @@ const ClientActiveGame = ({ eventId, event }: Props) => {
 
   return (
     <div>
-      {activeGame ? <ActiveGameDisplay /> : <EventOverview event={event} />}
+      {activeGame ? (
+        <ActiveGameDisplay event={event} activeGame={activeGame} />
+      ) : (
+        <EventOverview event={event} />
+      )}
     </div>
   );
 };
