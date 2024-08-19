@@ -1,6 +1,7 @@
 import { SoundclashEvent } from "@/app/types";
 import { createClient } from "@/utils/supabase/client";
 import { notFound } from "next/navigation";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default async function EventPage({
   params,
@@ -41,32 +42,37 @@ export default async function EventPage({
       <h3 className="text-xl font-semibold mb-4">Games</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {event.games.map((game, index) => (
-          <div key={index} className="bg-white rounded-lg shadow-md p-4">
-            <img
-              className="w-full h-48 object-cover rounded-md mb-4"
-              src={game.game_image}
-              alt={`Game ${index + 1}`}
-            />
-            <div>
-              <h4 className="text-lg font-semibold mb-2">Game {index + 1}</h4>
-              <div className="flex items-center mb-2">
-                <img
-                  className="w-12 h-12 object-cover rounded-full mr-2"
-                  src={game.dj_1_id.main_image}
-                  alt={game.dj_1_id.name}
-                />
-                <p className="text-sm text-gray-600">{game.dj_1_id.name}</p>
+          <Card key={index}>
+            <CardHeader>
+              <CardTitle>Game {index + 1}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <img
+                className="w-full h-48 object-cover rounded-md mb-4"
+                src={game.game_image}
+                alt={`Game ${index + 1}`}
+              />
+              <div>
+                <h4 className="text-lg font-semibold mb-2"></h4>
+                <div className="flex items-center mb-2">
+                  <img
+                    className="w-12 h-12 object-cover rounded-full mr-2"
+                    src={game.dj_1_id.main_image}
+                    alt={game.dj_1_id.name}
+                  />
+                  <p className="text-sm">{game.dj_1_id.name}</p>
+                </div>
+                <div className="flex items-center">
+                  <img
+                    className="w-12 h-12 object-cover rounded-full mr-2"
+                    src={game.dj_2_id.main_image}
+                    alt={game.dj_2_id.name}
+                  />
+                  <p className="text-sm">{game.dj_2_id.name}</p>
+                </div>
               </div>
-              <div className="flex items-center">
-                <img
-                  className="w-12 h-12 object-cover rounded-full mr-2"
-                  src={game.dj_2_id.main_image}
-                  alt={game.dj_2_id.name}
-                />
-                <p className="text-sm text-gray-600">{game.dj_2_id.name}</p>
-              </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
     </div>
