@@ -10,7 +10,6 @@ export default async function EventPage({
 }) {
   const supabase = createClient();
 
-  // Fetch event details, associated games, and DJ details
   const { data: event, error: eventError } = await supabase
     .from("events")
     .select(

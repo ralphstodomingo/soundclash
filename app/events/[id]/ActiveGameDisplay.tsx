@@ -101,7 +101,7 @@ export const ActiveGameDisplay = ({ event, activeGame }: Props) => {
       {/* Voting Section */}
       <div className="w-full bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 lg:h-2/5">
         <p className="text-gray-600 dark:text-gray-400">
-          No announcements at the moment.
+          Standby for the next voting session!
         </p>
       </div>
     </div>

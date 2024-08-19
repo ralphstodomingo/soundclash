@@ -33,7 +33,8 @@ interface VotingSession {
   concluded: boolean;
 }
 
-interface Powerup {
+export interface Powerup {
+  id: string;
   image: string;
   name: string;
   description: string;
