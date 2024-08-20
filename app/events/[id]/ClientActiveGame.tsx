@@ -6,6 +6,7 @@ import { createClient } from "@/utils/supabase/client";
 import { EventOverview } from "./EventOverview";
 import { ActiveGameDisplay } from "./ActiveGameDisplay";
 import { SoundclashEvent } from "@/app/types";
+import NotificationPrompt from "./NotificationButton";
 
 interface Props {
   eventId: string;
@@ -77,6 +78,18 @@ const ClientActiveGame = ({ eventId, event }: Props) => {
     };
   }, [eventId]);
 
+  useEffect(() => {
+    navigator.serviceWorker
+      .register("/sw.js")
+      .then((registration) =>
+        console.log(
+          "Service Worker registration successful with scope: ",
+          registration.scope
+        )
+      )
+      .catch((err) => console.log("Service Worker registration failed: ", err));
+  }, []);
+
   return (
     <div>
       {activeGame ? (
@@ -84,6 +97,7 @@ const ClientActiveGame = ({ eventId, event }: Props) => {
       ) : (
         <EventOverview event={event} />
       )}
+      <NotificationPrompt />
     </div>
   );
 };
