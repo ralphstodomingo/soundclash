@@ -25,11 +25,15 @@ export interface SoundclashEvent {
   games: Game[];
 }
 
-interface VotingSession {
+export interface VotingSession {
+  id: string;
   game_id: string;
+  games: Game;
   powerup_id: string | null;
-  dj_1_vote: number;
-  dj_2_vote: number;
+  emoji_id: number | null; // yep, made an oopsie while creating the table, it's fine.
+  dj_1_vote_count: number;
+  dj_2_vote_count: number;
+  winner: boolean;
   concluded: boolean;
 }
 
@@ -38,4 +42,10 @@ export interface Powerup {
   image: string;
   name: string;
   description: string;
+}
+
+export interface Emoji {
+  id: number;
+  image: string;
+  name: string;
 }

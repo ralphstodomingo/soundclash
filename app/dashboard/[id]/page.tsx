@@ -15,7 +15,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Powerup, SoundclashEvent } from "@/app/types";
+import { Emoji, Powerup, SoundclashEvent, VotingSession } from "@/app/types";
+import { cn } from "@/lib/utils";
 
 const supabase = createClient();
 
@@ -25,6 +26,8 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
   const [activeGame, setActiveGame] = useState<string | null>(null);
   const [selectedGame, setSelectedGame] = useState<string | null>(null);
   const [powerups, setPowerups] = useState<Powerup[] | null>(null);
+  const [emojis, setEmojis] = useState<Emoji[] | null>(null);
+  const [votingSessions, setVotingSessions] = useState<VotingSession[]>([]);
 
   useEffect(() => {
     const getEventData = async () => {
@@ -62,10 +65,17 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
   }, []);
 
   useEffect(() => {
-    if (!event) {
-      return;
-    }
+    const getEmojis = async () => {
+      const { data: emojis } = await supabase.from("emoji").select("*");
 
+      setEmojis(emojis);
+    };
+
+    getEmojis();
+  }, []);
+
+  // event-games fetch, subscription
+  useEffect(() => {
     const fetchActiveGame = async () => {
       const { data, error } = await supabase
         .from("event_games")
@@ -103,7 +113,63 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
     return () => {
       supabase.removeChannel(activeGameSubscription);
     };
-  }, [event]);
+  }, []);
+
+  // voting sessions fetch, subscription
+  useEffect(() => {
+    const fetchVotingSessions = async () => {
+      const { data, error } = await supabase
+        .from("voting_session")
+        .select("*, games!inner(*)") // Fetch voting_session and join with games table
+        .eq("games.event_id", params.id); // Filter by event_id
+
+      if (data) {
+        console.log("eschaton data", data);
+        setVotingSessions(data);
+      }
+      if (error) {
+        console.error("Error fetching voting sessions:", error);
+      }
+    };
+
+    fetchVotingSessions();
+
+    const votingSessionSubscription = supabase
+      .channel("event_channel")
+      .on<VotingSession>(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "voting_session",
+          filter: `game_id=in.(SELECT id FROM games WHERE event_id=eq.${params.id})`,
+        },
+        (payload) => {
+          setVotingSessions((prevSessions) => [...prevSessions, payload.new]);
+        }
+      )
+      .on<VotingSession>(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "voting_session",
+          filter: `game_id=in.(SELECT id FROM games WHERE event_id=eq.${params.id})`,
+        },
+        (payload) => {
+          setVotingSessions((prevSessions) =>
+            prevSessions.map((session) =>
+              session.id === payload.new.id ? payload.new : session
+            )
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(votingSessionSubscription);
+    };
+  }, [params.id]);
 
   // done
   const startEvent = async () => {
@@ -144,7 +210,7 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
   const createVotingSession = async (powerupId: string | null) => {
     setLoading(true);
     try {
-      await supabase.from("voting_sessions").insert({
+      await supabase.from("voting_session").insert({
         game_id: selectedGame,
         powerup_id: powerupId,
         concluded: false,
@@ -158,7 +224,7 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
     setLoading(true);
     try {
       await supabase
-        .from("voting_sessions")
+        .from("voting_session")
         .update({ concluded: true })
         .eq("game_id", selectedGame);
     } finally {
@@ -166,7 +232,7 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
     }
   };
 
-  const voteForWinner = async () => {
+  const startWinnerVoting = async () => {
     setLoading(true);
     try {
       await createVotingSession(null); // Create voting session for winner
@@ -218,8 +284,8 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
           End Voting and Event
         </Button>
       </div>
-      <div className="flex-grow flex justify-center h-full gap-4">
-        <div className="flex flex-col items-center w-1/3 h-full">
+      <div className="flex-grow flex justify-center h-full gap-8">
+        <div className="flex flex-col items-center w-2/6 h-full">
           <h3 className="text-2xl font-bold mb-6">Games</h3>
           <Table>
             <TableHeader>
@@ -275,7 +341,7 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
             </TableBody>
           </Table>
         </div>
-        <div className="flex flex-col items-center w-1/3 h-full">
+        <div className="flex flex-col items-center w-2/6 h-full">
           <h3 className="text-2xl font-bold mb-4">Voting</h3>
           <h4 className="text-1xl font-bold mb-4">Powerups</h4>
           <Table>
@@ -318,8 +384,116 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
             </TableBody>
           </Table>
         </div>
-        <div className="flex flex-col items-center w-1/3 h-full">
+        <div className="flex flex-col items-center w-2/6 h-full">
           <h4 className="text-1xl font-bold mb-4">Voting Sessions</h4>
+          <div className="flex gap-2">
+            <Button onClick={startWinnerVoting} disabled={loading}>
+              Start Winner Voting
+            </Button>
+            <Button
+              // onClick={startEmojiVoting}
+              disabled={loading}
+            >
+              Start Emoji Voting
+            </Button>
+            <Button
+              onClick={endVoting}
+              disabled={loading}
+              variant="destructive"
+            >
+              End Voting
+            </Button>
+          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Voting for...</TableHead>
+                <TableHead>DJ 1 and vote count</TableHead>
+                <TableHead>DJ 2 and vote count</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {event &&
+                votingSessions &&
+                votingSessions.map((votingSession, index) => {
+                  const game = event.games.find(
+                    (game) => game.id === votingSession.games.id
+                  );
+                  const powerup = powerups?.find(
+                    (powerup) => powerup.id === votingSession.powerup_id
+                  );
+                  const emoji = emojis?.find(
+                    (emoji) => emoji.id === votingSession.emoji_id
+                  );
+                  const higherVoteCount = Math.max(
+                    votingSession.dj_1_vote_count,
+                    votingSession.dj_2_vote_count
+                  );
+
+                  if (!game) {
+                    return null;
+                  }
+
+                  return (
+                    <TableRow key={index}>
+                      <TableCell className="text-right">
+                        {emoji ? (
+                          <div className="flex">
+                            <img
+                              className="w-4 h-4 object-cover mr-2"
+                              src={emoji.image}
+                              alt={emoji.name}
+                            />
+                            {emoji.name}
+                          </div>
+                        ) : powerup ? (
+                          <div className="flex">
+                            <img
+                              className="w-4 h-4 object-cover mr-2"
+                              src={powerup.image}
+                              alt={powerup.name}
+                            />
+                            {powerup.name}
+                          </div>
+                        ) : (
+                          "Winner"
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div
+                          className={cn("flex", {
+                            "font-bold":
+                              votingSession.dj_1_vote_count === higherVoteCount,
+                          })}
+                        >
+                          <img
+                            className="w-4 h-4 object-cover mr-2"
+                            src={game.dj_1_id.main_image}
+                            alt={game.dj_1_id.name}
+                          />
+                          {`${game.dj_1_id.name}: (${votingSession.dj_1_vote_count} votes)`}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div
+                          className={cn("flex", {
+                            "font-bold":
+                              votingSession.dj_2_vote_count === higherVoteCount,
+                          })}
+                        >
+                          <img
+                            className="w-4 h-4 object-cover mr-2"
+                            src={game.dj_2_id.main_image}
+                            alt={game.dj_2_id.name}
+                          />
+                          {`${game.dj_2_id.name}: (${votingSession.dj_2_vote_count} votes)`}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+            </TableBody>
+          </Table>
         </div>
       </div>
 
@@ -329,12 +503,6 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
           disabled={loading}
         >
           Vote for Powerups
-        </Button>
-        <Button onClick={endVoting} disabled={loading}>
-          End Voting
-        </Button>
-        <Button onClick={voteForWinner} disabled={loading}>
-          Vote for Winner
         </Button>
         <Input
           type="text"
