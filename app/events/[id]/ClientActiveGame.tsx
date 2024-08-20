@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { EventOverview } from "./EventOverview";
@@ -12,6 +13,7 @@ interface Props {
 }
 
 const ClientActiveGame = ({ eventId, event }: Props) => {
+  const router = useRouter();
   const [activeGame, setActiveGame] = useState<string | null>(null);
 
   useEffect(() => {
@@ -35,7 +37,7 @@ const ClientActiveGame = ({ eventId, event }: Props) => {
     fetchActiveGame();
 
     const activeGameSubscription = supabase
-      .channel("event_channel")
+      .channel("active_game_channel")
       .on(
         "postgres_changes",
         {
@@ -47,6 +49,25 @@ const ClientActiveGame = ({ eventId, event }: Props) => {
         (payload) => {
           const updatedActiveGame = payload.new.active_game;
           setActiveGame(updatedActiveGame);
+        }
+      )
+      .subscribe();
+
+    const eventSubscription = supabase
+      .channel("event_channel")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "events",
+          filter: `id=eq.${eventId}`,
+        },
+        (payload) => {
+          // only trigger if the page is open when the event concludes.
+          if (payload.new.concluded) {
+            router.push(`/survey/${eventId}`);
+          }
         }
       )
       .subscribe();
