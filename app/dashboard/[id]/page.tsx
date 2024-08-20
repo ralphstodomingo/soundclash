@@ -74,7 +74,6 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
     getEmojis();
   }, []);
 
-  // event-games fetch, subscription
   useEffect(() => {
     const fetchActiveGame = async () => {
       const { data, error } = await supabase
@@ -115,7 +114,6 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
     };
   }, []);
 
-  // voting sessions fetch, subscription
   useEffect(() => {
     if (!event) {
       return;
@@ -124,8 +122,8 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
     const fetchVotingSessions = async () => {
       const { data, error } = await supabase
         .from("voting_session")
-        .select("*, games!inner(*)") // Fetch voting_session and join with games table
-        .eq("games.event_id", params.id); // Filter by event_id
+        .select("*, games!inner(*)")
+        .eq("games.event_id", params.id);
 
       if (data) {
         console.log("eschaton data", data);
@@ -160,7 +158,6 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
           schema: "public",
           table: "voting_session",
           filter: `game_id=in.(${gameIds})`,
-          // filter: `game_id=in.(SELECT id FROM games WHERE event_id=eq.${params.id})`,
         },
         (payload) => {
           console.log("eschaton payload", payload);
@@ -178,11 +175,9 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
     };
   }, [params.id, event]);
 
-  // done
   const startEvent = async () => {
     setLoading(true);
     try {
-      // Load default game and update active_game
       const { data: event } = await supabase
         .from("event_games")
         .select("default_game")
@@ -200,7 +195,6 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
     }
   };
 
-  // done
   const loadGame = async (game_id: string) => {
     setLoading(true);
     try {
@@ -219,7 +213,6 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
     winner?: boolean;
   }
 
-  // not done yet
   const createVotingSession = async (args: VotingSessionArgs) => {
     setLoading(true);
     try {
@@ -266,12 +259,15 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
   };
 
   const startEmojiVoting = async () => {
-    if (!emojis) {
+    console.log("eschaton a", emojis);
+    if (!emojis || emojis.length === 0) {
+      console.log("eschaton", emojis);
       return;
     }
 
     setLoading(true);
     try {
+      console.log("eschaton b");
       await Promise.all(
         emojis.map((emoji) => createVotingSession({ emoji_id: emoji.id }))
       );
@@ -280,15 +276,19 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
     }
   };
 
-  // done
   const endVotingAndEvent = async () => {
+    console.log("eschaton", params.id);
     setLoading(true);
     try {
-      await endVoting(); // End voting
+      await endVoting();
       await supabase
         .from("event_games")
         .update({ active_game: null })
         .eq("event_id", params.id);
+      await supabase
+        .from("events")
+        .update({ concluded: true })
+        .eq("id", params.id);
     } finally {
       setLoading(false);
     }
@@ -353,7 +353,12 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
                       {activeGame !== game.id ? (
                         <Button
                           onClick={() => loadGame(game.id)}
-                          disabled={loading}
+                          disabled={
+                            loading ||
+                            votingSessions.some(
+                              (votingSession) => !votingSession.concluded
+                            )
+                          }
                           size="sm"
                           variant="outline"
                         >
@@ -398,7 +403,13 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
                       <TableCell className="text-right">
                         <Button
                           onClick={() => startPowerupVoting(powerup.id)}
-                          disabled={loading || !activeGame}
+                          disabled={
+                            loading ||
+                            !activeGame ||
+                            votingSessions.some(
+                              (votingSession) => !votingSession.concluded
+                            )
+                          }
                           size="sm"
                           variant="outline"
                         >
@@ -426,7 +437,6 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
               Start Winner Voting
             </Button>
             <Button
-              // onClick={startEmojiVoting}
               disabled={
                 loading ||
                 !activeGame ||
@@ -460,90 +470,100 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
             <TableBody>
               {event &&
                 votingSessions &&
-                votingSessions.map((votingSession, index) => {
-                  const game = event.games.find(
-                    (game) => game.id === votingSession.game_id
-                  );
-                  const powerup = powerups?.find(
-                    (powerup) => powerup.id === votingSession.powerup_id
-                  );
-                  const emoji = emojis?.find(
-                    (emoji) => emoji.id === votingSession.emoji_id
-                  );
-                  const higherVoteCount = Math.max(
-                    votingSession.dj_1_vote_count,
-                    votingSession.dj_2_vote_count
-                  );
+                votingSessions
+                  .sort(
+                    (a, b) =>
+                      new Date(b.created_at).getTime() -
+                      new Date(a.created_at).getTime()
+                  )
+                  .map((votingSession, index) => {
+                    const game = event.games.find(
+                      (game) => game.id === votingSession.game_id
+                    );
+                    const powerup = powerups?.find(
+                      (powerup) => powerup.id === votingSession.powerup_id
+                    );
+                    const emoji = emojis?.find(
+                      (emoji) => emoji.id === votingSession.emoji_id
+                    );
+                    const higherVoteCount = Math.max(
+                      votingSession.dj_1_vote_count,
+                      votingSession.dj_2_vote_count
+                    );
 
-                  if (!game) {
-                    return null;
-                  }
+                    if (!game) {
+                      return null;
+                    }
 
-                  return (
-                    <TableRow key={index}>
-                      <TableCell className="text-right">
-                        {emoji ? (
-                          <div className="flex">
+                    return (
+                      <TableRow key={index}>
+                        <TableCell className="text-right">
+                          {emoji ? (
+                            <div className="flex">
+                              <img
+                                className="w-4 h-4 object-cover mr-2"
+                                src={emoji.image}
+                                alt={emoji.name}
+                              />
+                              {emoji.name}
+                            </div>
+                          ) : powerup ? (
+                            <div className="flex">
+                              <img
+                                className="w-4 h-4 object-cover mr-2"
+                                src={powerup.image}
+                                alt={powerup.name}
+                              />
+                              {powerup.name}
+                            </div>
+                          ) : (
+                            <div className="flex">Game Winner</div>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div
+                            className={cn("flex", {
+                              "font-bold":
+                                votingSession.dj_1_vote_count &&
+                                votingSession.dj_1_vote_count ===
+                                  higherVoteCount,
+                            })}
+                          >
                             <img
                               className="w-4 h-4 object-cover mr-2"
-                              src={emoji.image}
-                              alt={emoji.name}
+                              src={game.dj_1_id.main_image}
+                              alt={game.dj_1_id.name}
                             />
-                            {emoji.name}
+                            {`${game.dj_1_id.name}: (${votingSession.dj_1_vote_count} votes)`}
                           </div>
-                        ) : powerup ? (
-                          <div className="flex">
+                        </TableCell>
+                        <TableCell>
+                          <div
+                            className={cn("flex", {
+                              "font-bold":
+                                votingSession.dj_2_vote_count &&
+                                votingSession.dj_2_vote_count ===
+                                  higherVoteCount,
+                            })}
+                          >
                             <img
                               className="w-4 h-4 object-cover mr-2"
-                              src={powerup.image}
-                              alt={powerup.name}
+                              src={game.dj_2_id.main_image}
+                              alt={game.dj_2_id.name}
                             />
-                            {powerup.name}
+                            {`${game.dj_2_id.name}: (${votingSession.dj_2_vote_count} votes)`}
                           </div>
-                        ) : (
-                          "Winner"
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div
-                          className={cn("flex", {
-                            "font-bold":
-                              votingSession.dj_1_vote_count === higherVoteCount,
-                          })}
-                        >
-                          <img
-                            className="w-4 h-4 object-cover mr-2"
-                            src={game.dj_1_id.main_image}
-                            alt={game.dj_1_id.name}
-                          />
-                          {`${game.dj_1_id.name}: (${votingSession.dj_1_vote_count} votes)`}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div
-                          className={cn("flex", {
-                            "font-bold":
-                              votingSession.dj_2_vote_count === higherVoteCount,
-                          })}
-                        >
-                          <img
-                            className="w-4 h-4 object-cover mr-2"
-                            src={game.dj_2_id.main_image}
-                            alt={game.dj_2_id.name}
-                          />
-                          {`${game.dj_2_id.name}: (${votingSession.dj_2_vote_count} votes)`}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {votingSession.concluded ? (
-                          <Badge variant="destructive">Concluded</Badge>
-                        ) : (
-                          <Badge>Ongoing</Badge>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
+                        </TableCell>
+                        <TableCell>
+                          {votingSession.concluded ? (
+                            <Badge variant="destructive">Concluded</Badge>
+                          ) : (
+                            <Badge>Ongoing</Badge>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
             </TableBody>
           </Table>
         </div>

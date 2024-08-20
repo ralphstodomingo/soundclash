@@ -23,6 +23,7 @@ export interface SoundclashEvent {
   subtitle: string;
   event_games: EventGame;
   games: Game[];
+  concluded: boolean;
 }
 
 export interface VotingSession {
@@ -35,6 +36,7 @@ export interface VotingSession {
   dj_2_vote_count: number;
   winner: boolean;
   concluded: boolean;
+  created_at: string;
 }
 
 export interface Powerup {
