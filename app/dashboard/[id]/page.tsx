@@ -18,6 +18,27 @@ import {
 import { Emoji, Powerup, SoundclashEvent, VotingSession } from "@/app/types";
 import { cn } from "@/lib/utils";
 
+const sendNotification = async (message: { title: string; body: string }) => {
+  try {
+    const response = await fetch("/api/trigger-notification", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ message }),
+    });
+
+    const data = await response.json();
+    console.log("eschaton data", data);
+    if (!response.ok) {
+      throw new Error(data.error || "Failed to send notification");
+    }
+    console.log(data);
+  } catch (error) {
+    console.error("Error:", error);
+  }
+};
+
 const supabase = createClient();
 
 export default function DashboardPage({ params }: { params: { id: string } }) {
@@ -190,6 +211,10 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
           .update({ active_game: event.default_game })
           .eq("event_id", params.id);
       }
+      await sendNotification({
+        title: "Event Started",
+        body: "The event has started. Let the Soundclash begin!",
+      });
     } finally {
       setLoading(false);
     }
@@ -289,6 +314,8 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
         .from("events")
         .update({ concluded: true })
         .eq("id", params.id);
+      // take note of below, if we really want to reset subscriptions.
+      // await supabase.from("push_subscriptions").delete().neq("id", ""); // purge all subscriptions
     } finally {
       setLoading(false);
     }

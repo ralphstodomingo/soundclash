@@ -6,7 +6,8 @@ import { createClient } from "@/utils/supabase/client";
 import { EventOverview } from "./EventOverview";
 import { ActiveGameDisplay } from "./ActiveGameDisplay";
 import { SoundclashEvent } from "@/app/types";
-import NotificationPrompt from "./NotificationButton";
+import NotificationPrompt from "./NotificationRequestOverlay";
+import NotificationRequestOverlay from "./NotificationRequestOverlay";
 
 interface Props {
   eventId: string;
@@ -97,7 +98,7 @@ const ClientActiveGame = ({ eventId, event }: Props) => {
       ) : (
         <EventOverview event={event} />
       )}
-      <NotificationPrompt />
+      <NotificationRequestOverlay />
     </div>
   );
 };
