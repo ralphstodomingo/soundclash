@@ -94,7 +94,7 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
     fetchActiveGame();
 
     const activeGameSubscription = supabase
-      .channel("event_channel")
+      .channel("event_games_channel")
       .on(
         "postgres_changes",
         {
@@ -117,6 +117,10 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
 
   // voting sessions fetch, subscription
   useEffect(() => {
+    if (!event) {
+      return;
+    }
+
     const fetchVotingSessions = async () => {
       const { data, error } = await supabase
         .from("voting_session")
@@ -134,15 +138,16 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
 
     fetchVotingSessions();
 
+    const gameIds = event.games.map((game) => game.id).join(",");
     const votingSessionSubscription = supabase
-      .channel("event_channel")
+      .channel("voting_session_changes")
       .on<VotingSession>(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "voting_session",
-          filter: `game_id=in.(SELECT id FROM games WHERE event_id=eq.${params.id})`,
+          filter: `game_id=in.(${gameIds})`,
         },
         (payload) => {
           setVotingSessions((prevSessions) => [...prevSessions, payload.new]);
@@ -154,9 +159,11 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
           event: "UPDATE",
           schema: "public",
           table: "voting_session",
-          filter: `game_id=in.(SELECT id FROM games WHERE event_id=eq.${params.id})`,
+          filter: `game_id=in.(${gameIds})`,
+          // filter: `game_id=in.(SELECT id FROM games WHERE event_id=eq.${params.id})`,
         },
         (payload) => {
+          console.log("eschaton payload", payload);
           setVotingSessions((prevSessions) =>
             prevSessions.map((session) =>
               session.id === payload.new.id ? payload.new : session
@@ -169,7 +176,7 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
     return () => {
       supabase.removeChannel(votingSessionSubscription);
     };
-  }, [params.id]);
+  }, [params.id, event]);
 
   // done
   const startEvent = async () => {
@@ -206,13 +213,19 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
     }
   };
 
+  interface VotingSessionArgs {
+    powerup_id?: string;
+    emoji_id?: number;
+    winner?: boolean;
+  }
+
   // not done yet
-  const createVotingSession = async (powerupId: string | null) => {
+  const createVotingSession = async (args: VotingSessionArgs) => {
     setLoading(true);
     try {
       await supabase.from("voting_session").insert({
-        game_id: selectedGame,
-        powerup_id: powerupId,
+        ...args,
+        game_id: activeGame,
         concluded: false,
       });
     } finally {
@@ -222,11 +235,12 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
 
   const endVoting = async () => {
     setLoading(true);
+    console.log("eschaton", activeGame);
     try {
       await supabase
         .from("voting_session")
         .update({ concluded: true })
-        .eq("game_id", selectedGame);
+        .eq("game_id", activeGame);
     } finally {
       setLoading(false);
     }
@@ -235,17 +249,42 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
   const startWinnerVoting = async () => {
     setLoading(true);
     try {
-      await createVotingSession(null); // Create voting session for winner
+      await createVotingSession({ winner: true });
     } finally {
       setLoading(false);
     }
   };
 
-  // done except for endVoting
+  const startPowerupVoting = async (powerup_id: string) => {
+    console.log("eschaton pp", powerup_id);
+    setLoading(true);
+    try {
+      await createVotingSession({ powerup_id });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const startEmojiVoting = async () => {
+    if (!emojis) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await Promise.all(
+        emojis.map((emoji) => createVotingSession({ emoji_id: emoji.id }))
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // done
   const endVotingAndEvent = async () => {
     setLoading(true);
     try {
-      // await endVoting(); // End voting
+      await endVoting(); // End voting
       await supabase
         .from("event_games")
         .update({ active_game: null })
@@ -255,24 +294,11 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
     }
   };
 
-  const changeGame = async (gameId: string) => {
-    setLoading(true);
-    try {
-      await supabase
-        .from("events")
-        .update({ active_game: gameId })
-        .eq("id", params.id);
-      setSelectedGame(gameId);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="p-6 w-full">
       <h1 className="text-2xl font-bold mb-6">Event Dashboard</h1>
       <div className="space-y-4 mb-8">
-        <Button onClick={startEvent} disabled={loading}>
+        <Button onClick={startEvent} disabled={loading || Boolean(activeGame)}>
           Start Event
         </Button>
         <Button
@@ -286,123 +312,141 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
       </div>
       <div className="flex-grow flex justify-center h-full gap-8">
         <div className="flex flex-col items-center w-2/6 h-full">
-          <h3 className="text-2xl font-bold mb-6">Games</h3>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>DJ 1</TableHead>
-                <TableHead>DJ 2</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {event?.games.map((game, index) => (
-                <TableRow key={index}>
-                  <TableCell>
-                    <div className="flex">
-                      <img
-                        className="w-4 h-4 object-cover mr-2"
-                        src={game.dj_1_id.main_image}
-                        alt={game.dj_1_id.name}
-                      />
-                      {game.dj_1_id.name}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex">
-                      <img
-                        className="w-4 h-4 object-cover mr-2"
-                        src={game.dj_2_id.main_image}
-                        alt={game.dj_2_id.name}
-                      />
-                      {game.dj_2_id.name}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {activeGame === game.id ? <Badge>Ongoing</Badge> : ""}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {activeGame !== game.id ? (
-                      <Button
-                        onClick={() => loadGame(game.id)}
-                        disabled={loading}
-                        size="sm"
-                        variant="outline"
-                      >
-                        Load Game
-                      </Button>
-                    ) : (
-                      ""
-                    )}
-                  </TableCell>
+          <div className="flex flex-col items-center w-full">
+            <h3 className="text-2xl font-bold mb-6">Games</h3>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>DJ 1</TableHead>
+                  <TableHead>DJ 2</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-        <div className="flex flex-col items-center w-2/6 h-full">
-          <h3 className="text-2xl font-bold mb-4">Voting</h3>
-          <h4 className="text-1xl font-bold mb-4">Powerups</h4>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {powerups &&
-                powerups.map((powerup, index) => (
+              </TableHeader>
+              <TableBody>
+                {event?.games.map((game, index) => (
                   <TableRow key={index}>
                     <TableCell>
                       <div className="flex">
                         <img
                           className="w-4 h-4 object-cover mr-2"
-                          src={powerup.image}
-                          alt={powerup.name}
+                          src={game.dj_1_id.main_image}
+                          alt={game.dj_1_id.name}
                         />
-                        {powerup.name}
+                        {game.dj_1_id.name}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex">
+                        <img
+                          className="w-4 h-4 object-cover mr-2"
+                          src={game.dj_2_id.main_image}
+                          alt={game.dj_2_id.name}
+                        />
+                        {game.dj_2_id.name}
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      {powerup.description}
+                      {activeGame === game.id ? <Badge>Ongoing</Badge> : ""}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        // onClick={() => loadGame(game.id)}
-                        disabled={loading || !activeGame}
-                        size="sm"
-                        variant="outline"
-                      >
-                        Start Voting
-                      </Button>
+                      {activeGame !== game.id ? (
+                        <Button
+                          onClick={() => loadGame(game.id)}
+                          disabled={loading}
+                          size="sm"
+                          variant="outline"
+                        >
+                          Load Game
+                        </Button>
+                      ) : (
+                        ""
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
-            </TableBody>
-          </Table>
+              </TableBody>
+            </Table>
+          </div>
+          <div className="flex flex-col items-center w-full mt-8">
+            <h3 className="text-2xl font-bold mb-4">Powerups</h3>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {powerups &&
+                  powerups.map((powerup, index) => (
+                    <TableRow key={index}>
+                      <TableCell>
+                        <div className="flex">
+                          <img
+                            className="w-4 h-4 object-cover mr-2"
+                            src={powerup.image}
+                            alt={powerup.name}
+                          />
+                          {powerup.name}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {powerup.description}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          onClick={() => startPowerupVoting(powerup.id)}
+                          disabled={loading || !activeGame}
+                          size="sm"
+                          variant="outline"
+                        >
+                          Start Voting
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+              </TableBody>
+            </Table>
+          </div>
         </div>
-        <div className="flex flex-col items-center w-2/6 h-full">
-          <h4 className="text-1xl font-bold mb-4">Voting Sessions</h4>
-          <div className="flex gap-2">
-            <Button onClick={startWinnerVoting} disabled={loading}>
+
+        <div className="flex flex-col items-center w-1/2 h-full mb-4">
+          <h4 className="text-2xl font-bold mb-4">Voting Sessions</h4>
+          <div className="flex gap-2 mb-4">
+            <Button
+              onClick={startWinnerVoting}
+              disabled={
+                loading ||
+                !activeGame ||
+                votingSessions.some((votingSession) => !votingSession.concluded)
+              }
+            >
               Start Winner Voting
             </Button>
             <Button
               // onClick={startEmojiVoting}
-              disabled={loading}
+              disabled={
+                loading ||
+                !activeGame ||
+                votingSessions.some((votingSession) => !votingSession.concluded)
+              }
+              onClick={startEmojiVoting}
             >
               Start Emoji Voting
             </Button>
-            <Button
-              onClick={endVoting}
-              disabled={loading}
-              variant="destructive"
-            >
-              End Voting
-            </Button>
+            {votingSessions.some(
+              (votingSession) => !votingSession.concluded
+            ) && (
+              <Button
+                onClick={endVoting}
+                disabled={loading}
+                variant="destructive"
+              >
+                End Voting
+              </Button>
+            )}
           </div>
           <Table>
             <TableHeader>
@@ -410,6 +454,7 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
                 <TableHead>Voting for...</TableHead>
                 <TableHead>DJ 1 and vote count</TableHead>
                 <TableHead>DJ 2 and vote count</TableHead>
+                <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -417,7 +462,7 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
                 votingSessions &&
                 votingSessions.map((votingSession, index) => {
                   const game = event.games.find(
-                    (game) => game.id === votingSession.games.id
+                    (game) => game.id === votingSession.game_id
                   );
                   const powerup = powerups?.find(
                     (powerup) => powerup.id === votingSession.powerup_id
@@ -489,32 +534,19 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
                           {`${game.dj_2_id.name}: (${votingSession.dj_2_vote_count} votes)`}
                         </div>
                       </TableCell>
+                      <TableCell>
+                        {votingSession.concluded ? (
+                          <Badge variant="destructive">Concluded</Badge>
+                        ) : (
+                          <Badge>Ongoing</Badge>
+                        )}
+                      </TableCell>
                     </TableRow>
                   );
                 })}
             </TableBody>
           </Table>
         </div>
-      </div>
-
-      <div className="space-y-4">
-        <Button
-          onClick={() => createVotingSession("powerupId")}
-          disabled={loading}
-        >
-          Vote for Powerups
-        </Button>
-        <Input
-          type="text"
-          placeholder="Enter new game ID"
-          onChange={(e) => setSelectedGame(e.target.value)}
-        />
-        <Button
-          onClick={() => changeGame(selectedGame ?? "")}
-          disabled={loading}
-        >
-          Change Game
-        </Button>
       </div>
     </div>
   );

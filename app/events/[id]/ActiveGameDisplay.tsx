@@ -49,7 +49,7 @@ export const ActiveGameDisplay = ({ event, activeGame }: Props) => {
   }
 
   return (
-    <div className="flex flex-col items-center justify-between h-screen bg-gray-100 dark:bg-gray-900">
+    <div className="flex flex-col items-center justify-between h-screen bg-gray-100 dark:bg-gray-900 max-w-[600px]">
       {/* Logo at the Top */}
       <div className="w-full">
         <Image
