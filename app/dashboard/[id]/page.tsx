@@ -212,7 +212,7 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
           .eq("event_id", params.id);
       }
       await sendNotification({
-        title: "Event Started",
+        title: "Get ready to rumble!",
         body: "The event has started. Let the Soundclash begin!",
       });
     } finally {
@@ -227,6 +227,10 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
         .from("event_games")
         .update({ active_game: game_id })
         .eq("event_id", params.id);
+      await sendNotification({
+        title: "The next clash begins!",
+        body: "Tune in for the next Soundclash!",
+      });
     } finally {
       setLoading(false);
     }
@@ -268,6 +272,10 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
     setLoading(true);
     try {
       await createVotingSession({ winner: true });
+      await sendNotification({
+        title: "Who won?",
+        body: "Vote for your Soundclash winner!",
+      });
     } finally {
       setLoading(false);
     }
@@ -278,6 +286,10 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
     setLoading(true);
     try {
       await createVotingSession({ powerup_id });
+      await sendNotification({
+        title: "Who gets more power?",
+        body: "Vote for who gets this powerup!",
+      });
     } finally {
       setLoading(false);
     }
@@ -292,7 +304,10 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
 
     setLoading(true);
     try {
-      console.log("eschaton b");
+      await sendNotification({
+        title: "Send some love!",
+        body: "Send support for your favorite DJ with an emoji!",
+      });
       await Promise.all(
         emojis.map((emoji) => createVotingSession({ emoji_id: emoji.id }))
       );
@@ -314,6 +329,10 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
         .from("events")
         .update({ concluded: true })
         .eq("id", params.id);
+      await sendNotification({
+        title: "Until next time!",
+        body: "Thanks for playing!",
+      });
       // take note of below, if we really want to reset subscriptions.
       // await supabase.from("push_subscriptions").delete().neq("id", ""); // purge all subscriptions
     } finally {

@@ -2,79 +2,73 @@
 
 import { useEffect, useState } from "react";
 
+const checkSubscriptionOnServer = async (endpoint: string) => {
+  const response = await fetch("/api/check-subscription", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ endpoint }),
+  });
+
+  const data = await response.json();
+  return data.exists;
+};
+
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4); // pad with '=' to make the base64 string length a multiple of 4
+  const base64 = (base64String + padding)
+    .replace(/-/g, "+") // 62nd char of encoding
+    .replace(/_/g, "/"); // 63rd char of encoding
+
+  const rawData = window.atob(base64); // decode base64 string to binary data
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+function arrayBufferToBase64(buffer: ArrayBuffer | null): string {
+  if (!buffer) return "";
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return window.btoa(binary);
+}
+
 const requestNotificationPermission = async () => {
   const permission = await Notification.requestPermission();
   if (permission === "granted") {
     const registration = await navigator.serviceWorker.ready;
-    let subscription = await registration.pushManager.getSubscription();
+    const applicationServerKey = urlBase64ToUint8Array(
+      "BE3zcqJpGQ6kQsw1QYDmVfCeRR6pyN0r-KcBGzi_IcnWZbsKHFz3Qc3o935-054Apet84BDsUcjZVeFtBbq83uc"
+    );
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey,
+    });
 
-    // If no subscription exists, create one
-    if (!subscription) {
-      subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey:
-          "BE3zcqJpGQ6kQsw1QYDmVfCeRR6pyN0r-KcBGzi_IcnWZbsKHFz3Qc3o935-054Apet84BDsUcjZVeFtBbq83uc",
-      });
-    } else {
-      // Validate the existing subscription
-      const isValid = await validateSubscription(subscription);
-      if (!isValid) {
-        subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey:
-            "BE3zcqJpGQ6kQsw1QYDmVfCeRR6pyN0r-KcBGzi_IcnWZbsKHFz3Qc3o935-054Apet84BDsUcjZVeFtBbq83uc",
-        });
-      }
-    }
+    // Correctly convert the keys to Base64 strings
+    const p256dhKey = subscription.getKey("p256dh");
+    const authKey = subscription.getKey("auth");
 
-    const subscriptionData = formatSubscription(subscription);
+    const subscriptionData = {
+      endpoint: subscription.endpoint,
+      keys: {
+        p256dh: arrayBufferToBase64(p256dhKey),
+        auth: arrayBufferToBase64(authKey),
+      },
+    };
+
+    // Call the function to save the subscription data
     await saveSubscription(subscriptionData);
   } else {
     console.error("Notification permission denied");
   }
-};
-
-const validateSubscription = async (subscription: PushSubscription) => {
-  try {
-    const response = await fetch("/api/trigger-notification", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ message: "Validation Check", subscription }),
-    });
-
-    if (response.ok) {
-      return true;
-    } else {
-      console.error("Subscription is invalid or expired");
-      return false;
-    }
-  } catch (error) {
-    console.error("Error validating subscription:", error);
-    return false;
-  }
-};
-
-const formatSubscription = (subscription: PushSubscription) => {
-  const arrayBufferToBase64 = (buffer: ArrayBuffer | null): string => {
-    if (!buffer) return "";
-    let binary = "";
-    const bytes = new Uint8Array(buffer);
-    const len = bytes.byteLength;
-    for (let i = 0; i < len; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    return window.btoa(binary);
-  };
-
-  return {
-    endpoint: subscription.endpoint,
-    keys: {
-      p256dh: arrayBufferToBase64(subscription.getKey("p256dh")),
-      auth: arrayBufferToBase64(subscription.getKey("auth")),
-    },
-  };
 };
 
 const saveSubscription = async (subscription: any) => {
@@ -101,18 +95,42 @@ export default function NotificationRequestOverlay() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const hasRequestedNotification = localStorage.getItem(
-      "soundclash-notification-requested"
-    );
-    if (!hasRequestedNotification) {
-      setVisible(true);
-    }
+    const checkSubscription = async () => {
+      const hasRequestedNotification = localStorage.getItem(
+        "soundclash-notification-requested"
+      );
+
+      if (hasRequestedNotification) {
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
+
+        if (subscription) {
+          const subscriptionExists = await checkSubscriptionOnServer(
+            subscription.endpoint
+          );
+
+          if (!subscriptionExists) {
+            // Remove the localStorage flag if the subscription is missing
+            localStorage.removeItem("soundclash-notification-requested");
+            setVisible(true);
+          }
+        } else {
+          // Subscription not found, show overlay
+          setVisible(true);
+        }
+      } else {
+        // Local storage flag not set, show overlay
+        setVisible(true);
+      }
+    };
+
+    checkSubscription();
   }, []);
 
   const handleRequestNotification = async () => {
     await requestNotificationPermission();
-    localStorage.setItem("soundclash-notification-requested", "true");
-    setVisible(false);
+    localStorage.setItem("soundclash-notification-requested", "true"); // Mark as shown
+    setVisible(false); // Hide the overlay
   };
 
   if (!visible) {
