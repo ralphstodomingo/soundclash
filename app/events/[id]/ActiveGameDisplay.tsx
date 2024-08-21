@@ -4,7 +4,8 @@ import { SoundclashEvent, VotingSession } from "@/app/types";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/utils/supabase/client";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import VotingSection from "./VotingSection";
 
 interface Props {
   event: SoundclashEvent;
@@ -14,19 +15,35 @@ interface Props {
 const ANIMATION_DURATION = 300;
 
 export const ActiveGameDisplay = ({ event, activeGame }: Props) => {
+  const supabase = createClient();
   const [isDJ1Animating, setIsDJ1Animating] = useState(false);
   const [isDJ2Animating, setIsDJ2Animating] = useState(false);
   const [allowVoting, setAllowVoting] = useState(false);
+  const [lastVotedSession, setLastVotedSession] = useState<string | null>(null); // for winner/powerups only
   const activeGameDetails = event.games.find((game) => game.id === activeGame);
   const [votingSessions, setVotingSessions] = useState<VotingSession[]>([]);
 
   console.log(event.id, votingSessions);
 
+  const activeVotingSessions = useMemo(
+    () => votingSessions.filter((votingSession) => !votingSession.concluded),
+    [votingSessions]
+  );
+
+  useEffect(() => {
+    if (activeVotingSessions.length) {
+      if (!activeVotingSessions[0].emoji_id) {
+        setAllowVoting(true);
+      }
+    } else {
+      setAllowVoting(false);
+    }
+  }, [activeVotingSessions]);
+
   useEffect(() => {
     if (!event) {
       return;
     }
-    const supabase = createClient();
 
     const fetchVotingSessions = async () => {
       const { data, error } = await supabase
@@ -81,35 +98,62 @@ export const ActiveGameDisplay = ({ event, activeGame }: Props) => {
     };
   }, [event, activeGame]);
 
-  const handleDJ1Click = (event: React.MouseEvent<HTMLImageElement>) => {
-    if (!allowVoting) {
+  const handleDJ1Click = async (event: React.MouseEvent<HTMLImageElement>) => {
+    if (!allowVoting || lastVotedSession === activeVotingSessions[0].id) {
       return;
     }
-
     setIsDJ1Animating(true);
 
-    // Remove the class after the animation completes
+    try {
+      const { error } = await supabase.rpc("increment_dj_1_vote", {
+        voting_session_id: activeVotingSessions[0].id,
+      });
+
+      if (error) {
+        console.error("Error incrementing DJ1 vote count:", error);
+      } else {
+        setLastVotedSession(activeVotingSessions[0].id);
+      }
+    } catch (error) {
+      console.error("Error during the Supabase request:", error);
+    }
+
     setTimeout(() => {
       setIsDJ1Animating(false);
-    }, ANIMATION_DURATION); // Duration should match the transition time in your CSS
+    }, ANIMATION_DURATION);
   };
 
-  const handleDJ2Click = (event: React.MouseEvent<HTMLImageElement>) => {
-    if (!allowVoting) {
+  const handleDJ2Click = async (event: React.MouseEvent<HTMLImageElement>) => {
+    if (!allowVoting || lastVotedSession === activeVotingSessions[0].id) {
       return;
     }
 
     setIsDJ2Animating(true);
 
-    // Remove the class after the animation completes
+    try {
+      const { error } = await supabase.rpc("increment_dj_2_vote", {
+        voting_session_id: activeVotingSessions[0].id,
+      });
+
+      if (error) {
+        console.error("Error incrementing DJ2 vote count:", error);
+      } else {
+        setLastVotedSession(activeVotingSessions[0].id);
+      }
+    } catch (error) {
+      console.error("Error during the Supabase request:", error);
+    }
+
     setTimeout(() => {
       setIsDJ2Animating(false);
-    }, ANIMATION_DURATION); // Duration should match the transition time in your CSS
+    }, ANIMATION_DURATION);
   };
 
   if (!activeGameDetails) {
     return null;
   }
+
+  console.log("eschaton", votingSessions);
 
   return (
     <div className="flex flex-col items-center justify-between h-screen bg-gray-100 dark:bg-gray-900 max-w-[600px]">
@@ -161,12 +205,10 @@ export const ActiveGameDisplay = ({ event, activeGame }: Props) => {
         </div>
       </div>
 
-      {/* Voting Section */}
-      <div className="w-full bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 lg:h-2/5">
-        <p className="text-gray-600 dark:text-gray-400">
-          Standby for the next voting session!
-        </p>
-      </div>
+      <VotingSection
+        votingSessions={activeVotingSessions}
+        lastVotedSession={lastVotedSession}
+      />
     </div>
   );
 };
