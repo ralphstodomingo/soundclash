@@ -19,8 +19,6 @@ export async function POST(request: Request) {
       .from("push_subscriptions")
       .select("*");
 
-    console.log("subscriptions", subscriptions);
-
     if (error) throw error;
 
     const sendNotifications = subscriptions.map((subscription) =>

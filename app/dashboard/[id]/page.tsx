@@ -29,11 +29,9 @@ const sendNotification = async (message: { title: string; body: string }) => {
     });
 
     const data = await response.json();
-    console.log("eschaton data", data);
     if (!response.ok) {
       throw new Error(data.error || "Failed to send notification");
     }
-    console.log(data);
   } catch (error) {
     console.error("Error:", error);
   }
@@ -147,7 +145,6 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
         .eq("games.event_id", params.id);
 
       if (data) {
-        console.log("eschaton data", data);
         setVotingSessions(data);
       }
       if (error) {
@@ -181,7 +178,6 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
           filter: `game_id=in.(${gameIds})`,
         },
         (payload) => {
-          console.log("eschaton payload", payload);
           setVotingSessions((prevSessions) =>
             prevSessions.map((session) =>
               session.id === payload.new.id ? payload.new : session
@@ -257,7 +253,6 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
 
   const endVoting = async () => {
     setLoading(true);
-    console.log("eschaton", activeGame);
     try {
       await supabase
         .from("voting_session")
@@ -282,7 +277,6 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
   };
 
   const startPowerupVoting = async (powerup_id: string) => {
-    console.log("eschaton pp", powerup_id);
     setLoading(true);
     try {
       await createVotingSession({ powerup_id });
@@ -296,9 +290,7 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
   };
 
   const startEmojiVoting = async () => {
-    console.log("eschaton a", emojis);
     if (!emojis || emojis.length === 0) {
-      console.log("eschaton", emojis);
       return;
     }
 
@@ -317,7 +309,6 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
   };
 
   const endVotingAndEvent = async () => {
-    console.log("eschaton", params.id);
     setLoading(true);
     try {
       await endVoting();

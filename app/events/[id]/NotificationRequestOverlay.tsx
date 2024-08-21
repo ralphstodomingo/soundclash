@@ -85,7 +85,6 @@ const saveSubscription = async (subscription: any) => {
     if (!response.ok) {
       throw new Error(data.error || "Failed to save subscription");
     }
-    console.log(data.message);
   } catch (error) {
     console.error("Error:", error);
   }

@@ -1,9 +1,10 @@
 "use client";
 import logoSrc from "@/app/logo.png";
-import { SoundclashEvent } from "@/app/types";
+import { SoundclashEvent, VotingSession } from "@/app/types";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/utils/supabase/client";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface Props {
   event: SoundclashEvent;
@@ -17,6 +18,68 @@ export const ActiveGameDisplay = ({ event, activeGame }: Props) => {
   const [isDJ2Animating, setIsDJ2Animating] = useState(false);
   const [allowVoting, setAllowVoting] = useState(false);
   const activeGameDetails = event.games.find((game) => game.id === activeGame);
+  const [votingSessions, setVotingSessions] = useState<VotingSession[]>([]);
+
+  console.log(event.id, votingSessions);
+
+  useEffect(() => {
+    if (!event) {
+      return;
+    }
+    const supabase = createClient();
+
+    const fetchVotingSessions = async () => {
+      const { data, error } = await supabase
+        .from("voting_session")
+        .select("*, games!inner(*)")
+        .eq("games.id", activeGame);
+
+      if (data) {
+        setVotingSessions(data);
+      }
+      if (error) {
+        console.error("Error fetching voting sessions:", error);
+      }
+    };
+
+    fetchVotingSessions();
+
+    const votingSessionSubscription = supabase
+      .channel("voting_session_changes")
+      .on<VotingSession>(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "voting_session",
+          filter: `game_id=eq.${activeGame}`,
+        },
+        (payload) => {
+          setVotingSessions((prevSessions) => [...prevSessions, payload.new]);
+        }
+      )
+      .on<VotingSession>(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "voting_session",
+          filter: `game_id=eq.${activeGame}`,
+        },
+        (payload) => {
+          setVotingSessions((prevSessions) =>
+            prevSessions.map((session) =>
+              session.id === payload.new.id ? payload.new : session
+            )
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(votingSessionSubscription);
+    };
+  }, [event, activeGame]);
 
   const handleDJ1Click = (event: React.MouseEvent<HTMLImageElement>) => {
     if (!allowVoting) {

@@ -75,6 +75,7 @@ const ClientActiveGame = ({ eventId, event }: Props) => {
       .subscribe();
 
     return () => {
+      supabase.removeChannel(eventSubscription);
       supabase.removeChannel(activeGameSubscription);
     };
   }, [eventId]);
