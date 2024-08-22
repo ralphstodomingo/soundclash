@@ -90,46 +90,38 @@ export default function NotificationRequestOverlay() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const checkSubscription = async () => {
-      const hasRequestedNotification = localStorage.getItem(
-        "soundclash-notification-requested"
-      );
+    const button = document.getElementById("notification-button");
 
-      if (!hasRequestedNotification) {
-        setVisible(true);
-        return;
-      }
-
+    const handleRequestNotification = async () => {
       try {
-        const registration = await navigator.serviceWorker.ready;
-        const subscription = await registration.pushManager.getSubscription();
-
-        if (subscription) {
-          const subscriptionExists = await checkSubscriptionOnServer(
-            subscription.endpoint
-          );
-
-          if (!subscriptionExists) {
-            localStorage.removeItem("soundclash-notification-requested");
-            setVisible(true);
-          }
-        } else {
-          setVisible(true);
-        }
+        await requestNotificationPermission();
+        localStorage.setItem("soundclash-notification-requested", "true");
+        setTimeout(() => setVisible(false), 100); // Delay to ensure state update
       } catch (error) {
-        console.error("Error checking subscription:", error);
-        setVisible(true); // Show overlay if there's an error
+        console.error("Error requesting notification permission:", error);
       }
     };
 
-    setTimeout(checkSubscription, 500); // Adding a delay to ensure service worker is ready
-  }, []);
+    // Handle multiple event types to ensure the button works on iOS and other devices
+    const handleInteraction = () => handleRequestNotification();
 
-  const handleRequestNotification = async () => {
-    await requestNotificationPermission();
-    localStorage.setItem("soundclash-notification-requested", "true");
-    setVisible(false);
-  };
+    if (button) {
+      button.addEventListener("click", handleInteraction); // Standard click event
+      button.addEventListener("touchstart", handleInteraction); // Touch event for iOS
+      button.addEventListener("pointerdown", handleInteraction); // Pointer event fallback
+      button.addEventListener("focus", handleInteraction); // Focus event for accessibility
+    }
+
+    // Cleanup event listeners on component unmount
+    return () => {
+      if (button) {
+        button.removeEventListener("click", handleInteraction);
+        button.removeEventListener("touchstart", handleInteraction);
+        button.removeEventListener("pointerdown", handleInteraction);
+        button.removeEventListener("focus", handleInteraction);
+      }
+    };
+  }, []);
 
   if (!visible) {
     return null;
@@ -142,8 +134,9 @@ export default function NotificationRequestOverlay() {
           Be notified while games are ongoing when it's time to vote!
         </p>
         <button
-          onClick={handleRequestNotification}
+          id="notification-button"
           className="bg-blue-500 text-white px-4 py-2 hover:bg-blue-600"
+          tabIndex={0} // Ensure button is focusable
         >
           Enable Notifications
         </button>

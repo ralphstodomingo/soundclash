@@ -67,3 +67,11 @@
     @apply bg-background text-foreground;
   }
 }
+
+.fixed.inset-0 {
+  z-index: 9999;
+}
+
+.bg-white.p-4.shadow-lg {
+  pointer-events: auto;
+}
