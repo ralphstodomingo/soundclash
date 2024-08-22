@@ -31,6 +31,7 @@ export const ActiveGameDisplay = ({
   const activeGameDetails = event.games.find((game) => game.id === activeGame);
   const [votingSessions, setVotingSessions] = useState<VotingSession[]>([]);
   const [emojis, setEmojis] = useState<Emoji[]>([]);
+  const [lastVotedDJ, setLastVotedDJ] = useState<number | null>(null);
 
   const activeVotingSessions = useMemo(
     () => votingSessions.filter((votingSession) => !votingSession.concluded),
@@ -93,6 +94,7 @@ export const ActiveGameDisplay = ({
         },
         (payload) => {
           setVotingSessions((prevSessions) => [...prevSessions, payload.new]);
+          setLastVotedDJ(null);
         }
       )
       .on<VotingSession>(
@@ -137,6 +139,7 @@ export const ActiveGameDisplay = ({
         console.error("Error incrementing DJ1 vote count:", error);
       } else {
         setLastVotedSession(activeVotingSessions[0].id);
+        setLastVotedDJ(1);
       }
     } catch (error) {
       console.error("Error during the Supabase request:", error);
@@ -167,6 +170,7 @@ export const ActiveGameDisplay = ({
         console.error("Error incrementing DJ2 vote count:", error);
       } else {
         setLastVotedSession(activeVotingSessions[0].id);
+        setLastVotedDJ(2);
       }
     } catch (error) {
       console.error("Error during the Supabase request:", error);
@@ -207,10 +211,7 @@ export const ActiveGameDisplay = ({
               "relative flex flex-col items-center w-1/2 h-full p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border-2 border-white",
               {
                 "animate-pulse duration-300": isDJ1Animating,
-                "filter grayscale":
-                  !allowVoting ||
-                  activeVotingSessions.length === 0 ||
-                  lastVotedSession === activeVotingSessions[0].id,
+                "border-4 border-green-500": lastVotedDJ === 1,
               }
             )}
             onClick={handleDJ1Click}
@@ -218,7 +219,12 @@ export const ActiveGameDisplay = ({
             <img
               src={activeGameDetails?.dj_1_id.main_image}
               alt="DJ 1"
-              className="w-full h-full object-cover rounded-lg"
+              className={cn("w-full h-full object-cover rounded-lg", {
+                "filter grayscale":
+                  !allowVoting ||
+                  activeVotingSessions.length === 0 ||
+                  lastVotedSession === activeVotingSessions[0].id,
+              })}
             />
             <p className="my-4 text-xl font-semibold text-gray-800 dark:text-gray-200">
               {activeGameDetails?.dj_1_id.name}
@@ -238,10 +244,7 @@ export const ActiveGameDisplay = ({
               "relative flex flex-col items-center w-1/2 h-full p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border-2 border-white",
               {
                 "animate-pulse duration-300": isDJ2Animating,
-                "filter grayscale":
-                  !allowVoting ||
-                  activeVotingSessions.length === 0 ||
-                  lastVotedSession === activeVotingSessions[0].id,
+                "border-4 border-green-500": lastVotedDJ === 2,
               }
             )}
             onClick={handleDJ2Click}
@@ -249,7 +252,12 @@ export const ActiveGameDisplay = ({
             <img
               src={activeGameDetails?.dj_2_id.main_image}
               alt="DJ 2"
-              className="w-full h-full object-cover rounded-lg"
+              className={cn("w-full h-full object-cover rounded-lg", {
+                "filter grayscale":
+                  !allowVoting ||
+                  activeVotingSessions.length === 0 ||
+                  lastVotedSession === activeVotingSessions[0].id,
+              })}
             />
             <p className="my-4 text-xl font-semibold text-gray-800 dark:text-gray-200">
               {activeGameDetails?.dj_2_id.name}

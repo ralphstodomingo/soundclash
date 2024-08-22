@@ -10,8 +10,7 @@ const PowerupOverlay = ({ powerup }: PowerupOverlayProps) => {
   }
 
   return (
-    <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-50 p-2">
-      <div className="flex bg-white dark:bg-gray-800 rounded-lg shadow-md p-2 w-full max-w-xs pointer-events-auto">
+      <div className="flex bg-white dark:bg-gray-800 w-full mt-4">
         <img
           src={powerup.image}
           alt={powerup.name}
@@ -26,7 +25,6 @@ const PowerupOverlay = ({ powerup }: PowerupOverlayProps) => {
           </p>
         </div>
       </div>
-    </div>
   );
 };
 
