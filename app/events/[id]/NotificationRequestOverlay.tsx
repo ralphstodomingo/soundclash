@@ -16,12 +16,10 @@ const checkSubscriptionOnServer = async (endpoint: string) => {
 };
 
 function urlBase64ToUint8Array(base64String: string) {
-  const padding = "=".repeat((4 - (base64String.length % 4)) % 4); // pad with '=' to make the base64 string length a multiple of 4
-  const base64 = (base64String + padding)
-    .replace(/-/g, "+") // 62nd char of encoding
-    .replace(/_/g, "/"); // 63rd char of encoding
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
 
-  const rawData = window.atob(base64); // decode base64 string to binary data
+  const rawData = window.atob(base64);
   const outputArray = new Uint8Array(rawData.length);
 
   for (let i = 0; i < rawData.length; ++i) {
@@ -52,7 +50,6 @@ const requestNotificationPermission = async () => {
       applicationServerKey,
     });
 
-    // Correctly convert the keys to Base64 strings
     const p256dhKey = subscription.getKey("p256dh");
     const authKey = subscription.getKey("auth");
 
@@ -64,7 +61,6 @@ const requestNotificationPermission = async () => {
       },
     };
 
-    // Call the function to save the subscription data
     await saveSubscription(subscriptionData);
   } else {
     console.error("Notification permission denied");
@@ -99,7 +95,12 @@ export default function NotificationRequestOverlay() {
         "soundclash-notification-requested"
       );
 
-      if (hasRequestedNotification) {
+      if (!hasRequestedNotification) {
+        setVisible(true);
+        return;
+      }
+
+      try {
         const registration = await navigator.serviceWorker.ready;
         const subscription = await registration.pushManager.getSubscription();
 
@@ -109,27 +110,25 @@ export default function NotificationRequestOverlay() {
           );
 
           if (!subscriptionExists) {
-            // Remove the localStorage flag if the subscription is missing
             localStorage.removeItem("soundclash-notification-requested");
             setVisible(true);
           }
         } else {
-          // Subscription not found, show overlay
           setVisible(true);
         }
-      } else {
-        // Local storage flag not set, show overlay
-        setVisible(true);
+      } catch (error) {
+        console.error("Error checking subscription:", error);
+        setVisible(true); // Show overlay if there's an error
       }
     };
 
-    checkSubscription();
+    setTimeout(checkSubscription, 500); // Adding a delay to ensure service worker is ready
   }, []);
 
   const handleRequestNotification = async () => {
     await requestNotificationPermission();
-    localStorage.setItem("soundclash-notification-requested", "true"); // Mark as shown
-    setVisible(false); // Hide the overlay
+    localStorage.setItem("soundclash-notification-requested", "true");
+    setVisible(false);
   };
 
   if (!visible) {
