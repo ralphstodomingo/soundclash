@@ -55,13 +55,13 @@ const VotingSection = ({
     <div className="w-full bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 h-1/5 flex flex-col justify-center">
       {votingSessions[0].winner && (
         <p className="text-gray-600 dark:text-gray-400 text-center font-bold text-xl">
-          Click on the DJ you want to win!
+          Click on the SOUNDCLASHER you want to win!
         </p>
       )}
       {votingSessions[0].powerup_id && (
         <>
           <p className="text-gray-600 dark:text-gray-400 text-center font-bold text-xl">
-            Which DJ should get this powerup?
+            Which SOUNDCLASHER should get this powerup?
           </p>
           <PowerupOverlay
             powerup={powerups.find(
@@ -72,7 +72,7 @@ const VotingSection = ({
       )}
       {votingSessions[0].emoji_id && (
         <p className="text-gray-600 dark:text-gray-400 text-center font-bold text-xl">
-          Send love to your favorite DJ!
+          Send love to your favorite SOUNDCLASHER!
         </p>
       )}
     </div>
