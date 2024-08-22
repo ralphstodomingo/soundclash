@@ -32,8 +32,6 @@ export const ActiveGameDisplay = ({
   const [votingSessions, setVotingSessions] = useState<VotingSession[]>([]);
   const [emojis, setEmojis] = useState<Emoji[]>([]);
 
-  console.log(event.id, votingSessions);
-
   const activeVotingSessions = useMemo(
     () => votingSessions.filter((votingSession) => !votingSession.concluded),
     [votingSessions]
@@ -184,7 +182,7 @@ export const ActiveGameDisplay = ({
   }
 
   return (
-    <div className="flex flex-col items-center justify-between h-screen bg-gray-100 dark:bg-gray-900 max-w-[600px]">
+    <div className="flex flex-col items-center justify-between h-screen bg-gray-100 dark:bg-gray-900 max-w-[600px] px-4 pb-8">
       {/* Logo at the Top */}
       <div className="w-full">
         <Image
@@ -194,22 +192,35 @@ export const ActiveGameDisplay = ({
         />
       </div>
 
+      {/* Voting Section */}
+      <VotingSection
+        votingSessions={activeVotingSessions}
+        lastVotedSession={lastVotedSession}
+      />
+
       {/* DJ Images and Names */}
-      <div className="flex-grow w-full lg:h-3/5">
-        <div className="flex justify-center h-full">
+      <div className="flex-grow w-full lg:h-3/5 mt-4">
+        <div className="flex justify-center h-full space-x-4">
           {/* DJ 1 */}
           <div
-            className={cn("relative flex flex-col items-center w-1/2 h-full", {
-              "animate-pulse duration-300": isDJ1Animating,
-            })}
+            className={cn(
+              "relative flex flex-col items-center w-1/2 h-full p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border-2 border-white",
+              {
+                "animate-pulse duration-300": isDJ1Animating,
+                "filter grayscale":
+                  !allowVoting ||
+                  activeVotingSessions.length === 0 ||
+                  lastVotedSession === activeVotingSessions[0].id,
+              }
+            )}
             onClick={handleDJ1Click}
           >
             <img
               src={activeGameDetails?.dj_1_id.main_image}
               alt="DJ 1"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover rounded-lg"
             />
-            <p className="mt-4 mb-6 text-xl font-semibold text-gray-800 dark:text-gray-200">
+            <p className="my-4 text-xl font-semibold text-gray-800 dark:text-gray-200">
               {activeGameDetails?.dj_1_id.name}
             </p>
             <EmojiOverlay
@@ -223,17 +234,24 @@ export const ActiveGameDisplay = ({
 
           {/* DJ 2 */}
           <div
-            className={cn("relative flex flex-col items-center w-1/2 h-full", {
-              "animate-pulse duration-300": isDJ2Animating,
-            })}
+            className={cn(
+              "relative flex flex-col items-center w-1/2 h-full p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border-2 border-white",
+              {
+                "animate-pulse duration-300": isDJ2Animating,
+                "filter grayscale":
+                  !allowVoting ||
+                  activeVotingSessions.length === 0 ||
+                  lastVotedSession === activeVotingSessions[0].id,
+              }
+            )}
             onClick={handleDJ2Click}
           >
             <img
               src={activeGameDetails?.dj_2_id.main_image}
               alt="DJ 2"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover rounded-lg"
             />
-            <p className="mt-4 mb-6 text-xl font-semibold text-gray-800 dark:text-gray-200">
+            <p className="my-4 text-xl font-semibold text-gray-800 dark:text-gray-200">
               {activeGameDetails?.dj_2_id.name}
             </p>
             <EmojiOverlay
@@ -246,11 +264,6 @@ export const ActiveGameDisplay = ({
           </div>
         </div>
       </div>
-
-      <VotingSection
-        votingSessions={activeVotingSessions}
-        lastVotedSession={lastVotedSession}
-      />
     </div>
   );
 };
