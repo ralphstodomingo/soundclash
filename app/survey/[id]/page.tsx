@@ -14,6 +14,7 @@ type ConditionalQuestion = {
   question: string;
   options?: string[];
   type?: "slider" | "radio";
+  required?: boolean; // HERE
 };
 
 type ConditionalQuestionsMap = Record<string, ConditionalQuestion[]>;
@@ -25,9 +26,52 @@ export default function SurveyPage({ params }: { params: { id: string } }) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (question: string, value: any) => {
-    console.log("eschaton test2", question, value);
     setFormData((prev) => ({ ...prev, [question]: value }));
   };
+
+  const personalInformationQuestions = [
+    {
+      question: "First name",
+      required: true,
+    },
+    {
+      question: "Last name",
+      required: true,
+    },
+    {
+      question: "Phone number",
+    },
+    {
+      question: "Email",
+    },
+    {
+      question: "Instagram handle",
+    },
+    {
+      question: "TikTok handle",
+    },
+    {
+      question: "Age",
+    },
+    {
+      question: "Gender",
+    },
+    {
+      question: "Occupation",
+    },
+    {
+      question:
+        "What are your musical preferences? Please describe or list the genres or favourite artists.",
+    },
+    {
+      question: "On average, how many live events do you attend each month?",
+      options: ["1 to 3", "3 to 5", "5 or more"],
+    },
+    {
+      question: "On average, how many live events do you attend each month?",
+      options: ["Yes", "No"],
+    },
+  ];
 
   const commonQuestions = [
     {
@@ -510,9 +554,18 @@ export default function SurveyPage({ params }: { params: { id: string } }) {
           Please fill out this quick survey about your experience at SOUNDCLASH.
         </p>
       </div>
+      <div className="space-y-6">
+        {/* Common Questions */}
+        <h2 className="text-xl text-black dark:text-white font-bold mb-4">
+          Personal information
+        </h2>
+      </div>
 
       <div className="space-y-6">
         {/* Common Questions */}
+        <h2 className="text-xl text-black dark:text-white font-bold mb-4">
+          General questions
+        </h2>
         {commonQuestions.map((item, index) => (
           <div key={index}>
             <p className="text-black dark:text-white mb-2 font-medium">
@@ -545,6 +598,9 @@ export default function SurveyPage({ params }: { params: { id: string } }) {
         ))}
 
         {/* Conditional Questions based on ID */}
+        <h2 className="text-xl text-black dark:text-white font-bold mb-4">
+          Event questions
+        </h2>
         {params.id &&
           conditionalQuestions[params.id]?.map((item, index) => (
             <div key={index}>
