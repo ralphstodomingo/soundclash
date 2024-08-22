@@ -95,7 +95,7 @@ const DashboardTimerControl = ({ activeGame }: DashboardTimerControlProps) => {
     <div className="flex flex-col items-center p-4 space-y-4">
       {/* Time Input */}
       <div className="flex items-center space-x-2">
-        <Label className="text-gray-700 dark:text-gray-300">Add Time:</Label>
+        <Label className="text-gray-700 dark:text-gray-300">Set Time:</Label>
         <Input
           type="number"
           className="w-16 p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-gray-100"
@@ -118,13 +118,13 @@ const DashboardTimerControl = ({ activeGame }: DashboardTimerControlProps) => {
           className="text-white px-4 py-2 rounded-md"
           onClick={() => addTime(1)}
         >
-          Add to DJ 1
+          Set for DJ 1
         </Button>
         <Button
           className="text-white px-4 py-2 rounded-md"
           onClick={() => addTime(2)}
         >
-          Add to DJ 2
+          Set for DJ 2
         </Button>
       </div>
 
