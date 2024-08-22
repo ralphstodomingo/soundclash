@@ -1,23 +1,25 @@
 "use client";
 
 import logoSrc from "@/app/logo.png";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 
 // Type Definitions
-type ConditionalQuestion = {
+type Question = {
   question: string;
   options?: string[];
   type?: "slider" | "radio";
   required?: boolean; // HERE
 };
 
-type ConditionalQuestionsMap = Record<string, ConditionalQuestion[]>;
+type QuestionsMap = Record<string, Question[]>;
 
 export default function SurveyPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -29,7 +31,7 @@ export default function SurveyPage({ params }: { params: { id: string } }) {
     setFormData((prev) => ({ ...prev, [question]: value }));
   };
 
-  const personalInformationQuestions = [
+  const personalInformationQuestions: Question[] = [
     {
       question: "First name",
       required: true,
@@ -73,7 +75,7 @@ export default function SurveyPage({ params }: { params: { id: string } }) {
     },
   ];
 
-  const commonQuestions = [
+  const commonQuestions: Question[] = [
     {
       question:
         "How do you feel about changing the direction you face when a SOUNDCLASHER is playing?",
@@ -110,7 +112,7 @@ export default function SurveyPage({ params }: { params: { id: string } }) {
     },
   ];
 
-  const conditionalQuestions: ConditionalQuestionsMap = {
+  const conditionalQuestions: QuestionsMap = {
     "5a827b3c-9d16-49ae-9ce2-bdabaf18b58d": [
       {
         question: "How did you find using the APP?",
@@ -494,31 +496,44 @@ export default function SurveyPage({ params }: { params: { id: string } }) {
       },
     ],
   };
+  const [isSubmitDisabled, setIsSubmitDisabled] = useState(true);
+
+  useEffect(() => {
+    const checkRequiredFields = () => {
+      const allFieldsFilled = [
+        ...personalInformationQuestions,
+        ...commonQuestions,
+        ...(conditionalQuestions[params.id] || []),
+      ].every(
+        (item) =>
+          !item.required ||
+          (formData[item.question] && formData[item.question].trim() !== "")
+      );
+
+      setIsSubmitDisabled(!allFieldsFilled);
+    };
+
+    checkRequiredFields();
+  }, [formData, params.id]);
 
   const handleSubmit = async () => {
     setIsLoading(true);
-    let combinedQuestions = [...commonQuestions];
+    let combinedQuestions = [
+      ...personalInformationQuestions,
+      ...commonQuestions,
+    ];
 
-    // Combine the question arrays based on the survey ID
-    if (
-      params.id === "5a827b3c-9d16-49ae-9ce2-bdabaf18b58d" ||
-      params.id === "be937b71-7db6-4b4e-8c86-9e706a307078" ||
-      params.id === "91c1eb0c-1741-47d8-9e5b-f5422a00a34a"
-    ) {
+    if (params.id in conditionalQuestions) {
       combinedQuestions = [
         ...combinedQuestions,
         ...conditionalQuestions[params.id],
       ];
     }
-    // Add other conditions as needed
 
-    // Transform the question array to include the answers
     const combinedData = combinedQuestions.map((item) => ({
       question: item.question,
       answer: formData[item.question] || "",
     }));
-
-    console.log("eschaton", combinedData);
 
     const { data, error } = await supabase.from("survey_submissions").insert([
       {
@@ -530,8 +545,6 @@ export default function SurveyPage({ params }: { params: { id: string } }) {
     if (error) {
       console.error("Error inserting survey submission:", error);
     } else {
-      console.log("Survey submission successful:", data);
-      // Redirect to the thank-you page
       router.push("/thank-you");
     }
   };
@@ -554,13 +567,24 @@ export default function SurveyPage({ params }: { params: { id: string } }) {
           Please fill out this quick survey about your experience at SOUNDCLASH.
         </p>
       </div>
-      <div className="space-y-6">
-        {/* Common Questions */}
+      <div className="space-y-6 mb-8">
         <h2 className="text-xl text-black dark:text-white font-bold mb-4">
-          Personal information
+          Personal Information
         </h2>
+        {personalInformationQuestions.map((item, index) => (
+          <div key={index}>
+            <p className="text-black dark:text-white mb-2 font-medium">
+              {item.question}{" "}
+              {item.required && <span className="text-red-500">*</span>}
+            </p>
+            <Input
+              className="bg-white"
+              placeholder="Type your answer here..."
+              onChange={(e) => handleChange(item.question, e.target.value)}
+            />
+          </div>
+        ))}
       </div>
-
       <div className="space-y-6">
         {/* Common Questions */}
         <h2 className="text-xl text-black dark:text-white font-bold mb-4">
@@ -588,8 +612,8 @@ export default function SurveyPage({ params }: { params: { id: string } }) {
                 ))}
               </RadioGroup>
             ) : (
-              <textarea
-                className="w-full h-24 p-2 border rounded-md"
+              <Textarea
+                className=" bg-white"
                 placeholder="Type your answer here..."
                 onChange={(e) => handleChange(item.question, e.target.value)}
               />
@@ -629,7 +653,7 @@ export default function SurveyPage({ params }: { params: { id: string } }) {
               )}
             </div>
           ))}
-        <Button onClick={handleSubmit} disabled={isLoading}>
+        <Button onClick={handleSubmit} disabled={isSubmitDisabled || isLoading}>
           Submit
         </Button>
       </div>
