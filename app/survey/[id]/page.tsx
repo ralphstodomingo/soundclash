@@ -4,9 +4,10 @@ import logoSrc from "@/app/logo.png";
 import { useState } from "react";
 import Image from "next/image";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { createClient } from "@/utils/supabase/client";
+import { useRouter } from "next/navigation";
 
 // Type Definitions
 type ConditionalQuestion = {
@@ -18,6 +19,8 @@ type ConditionalQuestion = {
 type ConditionalQuestionsMap = Record<string, ConditionalQuestion[]>;
 
 export default function SurveyPage({ params }: { params: { id: string } }) {
+  const router = useRouter();
+  const supabase = createClient();
   const [formData, setFormData] = useState<{ [key: string]: string }>({});
   const [isLoading, setIsLoading] = useState(false);
 
@@ -448,7 +451,8 @@ export default function SurveyPage({ params }: { params: { id: string } }) {
     ],
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    setIsLoading(true);
     let combinedQuestions = [...commonQuestions];
 
     // Combine the question arrays based on the survey ID
@@ -470,9 +474,22 @@ export default function SurveyPage({ params }: { params: { id: string } }) {
       answer: formData[item.question] || "",
     }));
 
-    console.log("eschaton", combinedData); // This is your array with questions and answers
+    console.log("eschaton", combinedData);
 
-    // Submit combinedData to Supabase or process it further as needed
+    const { data, error } = await supabase.from("survey_submissions").insert([
+      {
+        event_id: params.id,
+        submission: combinedData,
+      },
+    ]);
+
+    if (error) {
+      console.error("Error inserting survey submission:", error);
+    } else {
+      console.log("Survey submission successful:", data);
+      // Redirect to the thank-you page
+      router.push("/thank-you");
+    }
   };
 
   return (
@@ -504,7 +521,7 @@ export default function SurveyPage({ params }: { params: { id: string } }) {
             {item.options ? (
               <RadioGroup
                 name={item.question}
-                onChange={(value) => handleChange(item.question, value)}
+                onValueChange={(value) => handleChange(item.question, value)}
               >
                 {item.options.map((option, optionIndex) => (
                   <div className="flex items-center space-x-2">
@@ -534,18 +551,11 @@ export default function SurveyPage({ params }: { params: { id: string } }) {
               <p className="text-black dark:text-white mb-2 font-medium">
                 {item.question}
               </p>
-              {item.type === "slider" && (
-                <Slider
-                  min={1}
-                  max={5}
-                  onChange={(value) => handleChange(item.question, value)}
-                />
-              )}
 
-              {item.type !== "slider" && item.options && (
+              {item.options && (
                 <RadioGroup
                   name={item.question}
-                  onChange={(value) => handleChange(item.question, value)}
+                  onValueChange={(value) => handleChange(item.question, value)}
                 >
                   {item.options.map((option, optionIndex) => (
                     <div className="flex items-center space-x-2">
