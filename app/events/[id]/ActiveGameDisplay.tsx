@@ -1,20 +1,28 @@
 "use client";
 import logoSrc from "@/app/logo.png";
-import { SoundclashEvent, VotingSession } from "@/app/types";
+import { Emoji, SoundclashEvent, VotingSession } from "@/app/types";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/utils/supabase/client";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import VotingSection from "./VotingSection";
+import EmojiOverlay from "./EmojiOverlay";
 
 interface Props {
   event: SoundclashEvent;
   activeGame: string;
+  decrementVotingCount: () => void;
+  emojiVoteCountRemaining: number;
 }
 
 const ANIMATION_DURATION = 300;
 
-export const ActiveGameDisplay = ({ event, activeGame }: Props) => {
+export const ActiveGameDisplay = ({
+  event,
+  activeGame,
+  decrementVotingCount,
+  emojiVoteCountRemaining,
+}: Props) => {
   const supabase = createClient();
   const [isDJ1Animating, setIsDJ1Animating] = useState(false);
   const [isDJ2Animating, setIsDJ2Animating] = useState(false);
@@ -22,6 +30,7 @@ export const ActiveGameDisplay = ({ event, activeGame }: Props) => {
   const [lastVotedSession, setLastVotedSession] = useState<string | null>(null); // for winner/powerups only
   const activeGameDetails = event.games.find((game) => game.id === activeGame);
   const [votingSessions, setVotingSessions] = useState<VotingSession[]>([]);
+  const [emojis, setEmojis] = useState<Emoji[]>([]);
 
   console.log(event.id, votingSessions);
 
@@ -39,6 +48,19 @@ export const ActiveGameDisplay = ({ event, activeGame }: Props) => {
       setAllowVoting(false);
     }
   }, [activeVotingSessions]);
+
+  useEffect(() => {
+    const fetchEmojis = async () => {
+      const { data, error } = await supabase.from("emoji").select("*");
+      if (error) {
+        console.error("Error fetching emojis:", error);
+      } else {
+        setEmojis(data);
+      }
+    };
+
+    fetchEmojis();
+  }, []);
 
   useEffect(() => {
     if (!event) {
@@ -153,8 +175,6 @@ export const ActiveGameDisplay = ({ event, activeGame }: Props) => {
     return null;
   }
 
-  console.log("eschaton", votingSessions);
-
   return (
     <div className="flex flex-col items-center justify-between h-screen bg-gray-100 dark:bg-gray-900 max-w-[600px]">
       {/* Logo at the Top */}
@@ -171,7 +191,7 @@ export const ActiveGameDisplay = ({ event, activeGame }: Props) => {
         <div className="flex justify-center h-full">
           {/* DJ 1 */}
           <div
-            className={cn("flex flex-col items-center w-1/2 h-full", {
+            className={cn("relative flex flex-col items-center w-1/2 h-full", {
               "animate-pulse duration-300": isDJ1Animating,
             })}
             onClick={handleDJ1Click}
@@ -184,11 +204,18 @@ export const ActiveGameDisplay = ({ event, activeGame }: Props) => {
             <p className="mt-4 mb-6 text-xl font-semibold text-gray-800 dark:text-gray-200">
               {activeGameDetails?.dj_1_id.name}
             </p>
+            <EmojiOverlay
+              emojis={emojis}
+              votingSessions={activeVotingSessions}
+              decrementCount={decrementVotingCount}
+              count={emojiVoteCountRemaining}
+              djNumber={1}
+            />
           </div>
 
           {/* DJ 2 */}
           <div
-            className={cn("flex flex-col items-center w-1/2 h-full", {
+            className={cn("relative flex flex-col items-center w-1/2 h-full", {
               "animate-pulse duration-300": isDJ2Animating,
             })}
             onClick={handleDJ2Click}
@@ -201,6 +228,13 @@ export const ActiveGameDisplay = ({ event, activeGame }: Props) => {
             <p className="mt-4 mb-6 text-xl font-semibold text-gray-800 dark:text-gray-200">
               {activeGameDetails?.dj_2_id.name}
             </p>
+            <EmojiOverlay
+              emojis={emojis}
+              votingSessions={activeVotingSessions}
+              decrementCount={decrementVotingCount}
+              count={emojiVoteCountRemaining}
+              djNumber={2}
+            />
           </div>
         </div>
       </div>

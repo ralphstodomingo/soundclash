@@ -6,7 +6,6 @@ import { createClient } from "@/utils/supabase/client";
 import { EventOverview } from "./EventOverview";
 import { ActiveGameDisplay } from "./ActiveGameDisplay";
 import { SoundclashEvent } from "@/app/types";
-import NotificationPrompt from "./NotificationRequestOverlay";
 import NotificationRequestOverlay from "./NotificationRequestOverlay";
 
 interface Props {
@@ -17,6 +16,11 @@ interface Props {
 const ClientActiveGame = ({ eventId, event }: Props) => {
   const router = useRouter();
   const [activeGame, setActiveGame] = useState<string | null>(null);
+  const [emojiVoteCountRemaining, setEmojiVoteCountRemaining] = useState(10);
+
+  const decrementVotingCount = () => {
+    setEmojiVoteCountRemaining((prev) => prev - 1);
+  };
 
   useEffect(() => {
     const supabase = createClient();
@@ -50,7 +54,13 @@ const ClientActiveGame = ({ eventId, event }: Props) => {
         },
         (payload) => {
           const updatedActiveGame = payload.new.active_game;
-          setActiveGame(updatedActiveGame);
+          setActiveGame((prev) => {
+            if (prev !== updatedActiveGame) {
+              setEmojiVoteCountRemaining(10);
+              return updatedActiveGame;
+            }
+            return prev;
+          });
         }
       )
       .subscribe();
@@ -95,7 +105,12 @@ const ClientActiveGame = ({ eventId, event }: Props) => {
   return (
     <div>
       {activeGame ? (
-        <ActiveGameDisplay event={event} activeGame={activeGame} />
+        <ActiveGameDisplay
+          event={event}
+          activeGame={activeGame}
+          emojiVoteCountRemaining={emojiVoteCountRemaining}
+          decrementVotingCount={decrementVotingCount}
+        />
       ) : (
         <EventOverview event={event} />
       )}

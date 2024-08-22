@@ -19,17 +19,6 @@ const VotingSection = ({
   const [powerups, setPowerups] = useState<Powerup[]>([]);
 
   useEffect(() => {
-    // Fetch emojis
-    const fetchEmojis = async () => {
-      const { data, error } = await supabase.from("emojis").select("*");
-      if (error) {
-        console.error("Error fetching emojis:", error);
-      } else {
-        setEmojis(data);
-      }
-    };
-
-    // Fetch powerups
     const fetchPowerups = async () => {
       const { data, error } = await supabase.from("powerups").select("*");
       if (error) {
@@ -39,9 +28,8 @@ const VotingSection = ({
       }
     };
 
-    fetchEmojis();
     fetchPowerups();
-  }, []); // Empty dependency array ensures this runs only once on component mount
+  }, []);
 
   if (!votingSessions.length || lastVotedSession === votingSessions[0].id) {
     return (
