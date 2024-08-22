@@ -550,7 +550,7 @@ export default function SurveyPage({ params }: { params: { id: string } }) {
   };
 
   return (
-    <div className="flex flex-col items-center justify-between bg-gray-100 dark:bg-gray-900 max-w-[600px] mx-auto p-4">
+    <div className="flex flex-col items-center justify-between bg-gray-100 dark:bg-gray-900 max-w-[600px] mx-auto p-8">
       {/* Logo at the Top */}
       <div className="w-full">
         <Image
