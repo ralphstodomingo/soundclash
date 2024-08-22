@@ -93,6 +93,7 @@ const DashboardTimerControl = ({ activeGame }: DashboardTimerControlProps) => {
 
   return (
     <div className="flex flex-col items-center p-4 space-y-4">
+      <h3 className="text-2xl font-bold mb-4">Timers</h3>
       {/* Time Input */}
       <div className="flex items-center space-x-2">
         <Label className="text-gray-700 dark:text-gray-300">Set Time:</Label>
