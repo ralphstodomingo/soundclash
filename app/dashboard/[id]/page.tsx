@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/table";
 import { Emoji, Powerup, SoundclashEvent, VotingSession } from "@/app/types";
 import { cn } from "@/lib/utils";
+import DashboardTimerControl from "./DashboardTimerControl";
 
 const sendNotification = async (message: { title: string; body: string }) => {
   try {
@@ -458,6 +459,11 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
               </TableBody>
             </Table>
           </div>
+          {
+            activeGame && (<DashboardTimerControl activeGame={activeGame}/>)
+          }
+          
+          
         </div>
 
         <div className="flex flex-col items-center w-1/2 h-full mb-4">
