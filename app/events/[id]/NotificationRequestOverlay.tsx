@@ -90,6 +90,15 @@ export default function NotificationRequestOverlay() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    const isSupported =
+      "serviceWorker" in navigator &&
+      "PushManager" in window &&
+      Notification.permission !== "denied";
+
+    if (!isSupported) {
+      return; // Do not show the prompt if the platform does not support push notifications
+    }
+
     const checkSubscription = async () => {
       const hasRequestedNotification = localStorage.getItem(
         "soundclash-notification-requested"
@@ -109,11 +118,9 @@ export default function NotificationRequestOverlay() {
             setVisible(true);
           }
         } else {
-          // Subscription not found, show overlay
           setVisible(true);
         }
       } else {
-        // Local storage flag not set, show overlay
         setVisible(true);
       }
     };
@@ -121,39 +128,15 @@ export default function NotificationRequestOverlay() {
     checkSubscription();
   }, []);
 
-  useEffect(() => {
-    const button = document.getElementById("notification-button");
-
-    const handleRequestNotification = async () => {
-      try {
-        await requestNotificationPermission();
-        localStorage.setItem("soundclash-notification-requested", "true");
-        setTimeout(() => setVisible(false), 100); // Delay to ensure state update
-      } catch (error) {
-        console.error("Error requesting notification permission:", error);
-      }
-    };
-
-    // Handle multiple event types to ensure the button works on iOS and other devices
-    const handleInteraction = () => handleRequestNotification();
-
-    if (button) {
-      button.addEventListener("click", handleInteraction); // Standard click event
-      button.addEventListener("touchstart", handleInteraction); // Touch event for iOS
-      button.addEventListener("pointerdown", handleInteraction); // Pointer event fallback
-      button.addEventListener("focus", handleInteraction); // Focus event for accessibility
+  const handleRequestNotification = async () => {
+    try {
+      await requestNotificationPermission();
+      localStorage.setItem("soundclash-notification-requested", "true");
+      setVisible(false); // Hide the overlay after permission is granted
+    } catch (error) {
+      console.error("Error requesting notification permission:", error);
     }
-
-    // Cleanup event listeners on component unmount
-    return () => {
-      if (button) {
-        button.removeEventListener("click", handleInteraction);
-        button.removeEventListener("touchstart", handleInteraction);
-        button.removeEventListener("pointerdown", handleInteraction);
-        button.removeEventListener("focus", handleInteraction);
-      }
-    };
-  }, [visible]);
+  };
 
   if (!visible) {
     return null;
@@ -167,8 +150,8 @@ export default function NotificationRequestOverlay() {
         </p>
         <button
           id="notification-button"
+          onClick={handleRequestNotification}
           className="bg-blue-500 text-white px-4 py-2 hover:bg-blue-600"
-          tabIndex={0} // Ensure button is focusable
         >
           Enable Notifications
         </button>

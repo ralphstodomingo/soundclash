@@ -121,7 +121,11 @@ export const ActiveGameDisplay = ({
   }, [event, activeGame]);
 
   const handleDJ1Click = async (event: React.MouseEvent<HTMLImageElement>) => {
-    if (!allowVoting || lastVotedSession === activeVotingSessions[0].id) {
+    if (
+      !allowVoting ||
+      lastVotedSession === activeVotingSessions[0].id ||
+      isDJ2Animating
+    ) {
       return;
     }
     setIsDJ1Animating(true);
@@ -146,7 +150,11 @@ export const ActiveGameDisplay = ({
   };
 
   const handleDJ2Click = async (event: React.MouseEvent<HTMLImageElement>) => {
-    if (!allowVoting || lastVotedSession === activeVotingSessions[0].id) {
+    if (
+      !allowVoting ||
+      lastVotedSession === activeVotingSessions[0].id ||
+      isDJ1Animating
+    ) {
       return;
     }
 
