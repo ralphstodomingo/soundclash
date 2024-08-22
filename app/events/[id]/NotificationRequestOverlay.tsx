@@ -90,6 +90,38 @@ export default function NotificationRequestOverlay() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    const checkSubscription = async () => {
+      const hasRequestedNotification = localStorage.getItem(
+        "soundclash-notification-requested"
+      );
+
+      if (hasRequestedNotification) {
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
+
+        if (subscription) {
+          const subscriptionExists = await checkSubscriptionOnServer(
+            subscription.endpoint
+          );
+
+          if (!subscriptionExists) {
+            localStorage.removeItem("soundclash-notification-requested");
+            setVisible(true);
+          }
+        } else {
+          // Subscription not found, show overlay
+          setVisible(true);
+        }
+      } else {
+        // Local storage flag not set, show overlay
+        setVisible(true);
+      }
+    };
+
+    checkSubscription();
+  }, []);
+
+  useEffect(() => {
     const button = document.getElementById("notification-button");
 
     const handleRequestNotification = async () => {
@@ -121,7 +153,7 @@ export default function NotificationRequestOverlay() {
         button.removeEventListener("focus", handleInteraction);
       }
     };
-  }, []);
+  }, [visible]);
 
   if (!visible) {
     return null;
