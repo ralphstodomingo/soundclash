@@ -19,14 +19,14 @@ export const EventOverview = ({ event }: Props) => {
       <p className="text-lg mb-8">{event.subtitle}</p>
 
       <h3 className="text-xl font-semibold mb-4">Games</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6">
         {event.games.map((game, index) => (
           <Card key={index}>
             <CardHeader>
               <CardTitle>Game {index + 1}</CardTitle>
             </CardHeader>
             <img
-              className="w-full h-48 object-cover rounded-md mb-4"
+              className="w-full h-72 object-cover rounded-md mb-4"
               src={game.game_image}
               alt={`Game ${index + 1}`}
             />
