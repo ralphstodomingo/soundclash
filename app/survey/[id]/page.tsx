@@ -26,9 +26,18 @@ export default function SurveyPage({ params }: { params: { id: string } }) {
   const supabase = createClient();
   const [formData, setFormData] = useState<{ [key: string]: string }>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [page, setPage] = useState(1);
 
   const handleChange = (question: string, value: any) => {
     setFormData((prev) => ({ ...prev, [question]: value }));
+  };
+
+  const surveyTitles: Record<string, string> = {
+    "5a827b3c-9d16-49ae-9ce2-bdabaf18b58d": "Mez Mauve VS Manu Miran",
+    "be937b71-7db6-4b4e-8c86-9e706a307078":
+      "Levy VS Shigecki / Umbra Abra VS Mapa Mota",
+    "91c1eb0c-1741-47d8-9e5b-f5422a00a34a":
+      "Levy VS Shigecki / Dukane VS Rivussy",
   };
 
   const personalInformationQuestions: Question[] = [
@@ -47,10 +56,7 @@ export default function SurveyPage({ params }: { params: { id: string } }) {
       question: "Email",
     },
     {
-      question: "Instagram handle",
-    },
-    {
-      question: "TikTok handle",
+      question: "What is your Instagram or TikTok handle?",
     },
     {
       question: "Age",
@@ -397,16 +403,6 @@ export default function SurveyPage({ params }: { params: { id: string } }) {
       },
       {
         question:
-          "How do you feel about the half-time length in the second game?",
-        options: [
-          "I did not like that there was a Half-Time",
-          "Too Short",
-          "Just Right",
-          "Too Long",
-        ],
-      },
-      {
-        question:
           "How do you feel about experiencing two games of different lengths in the same event?",
         options: [
           "It made my experience less enjoyable",
@@ -561,78 +557,45 @@ export default function SurveyPage({ params }: { params: { id: string } }) {
       </div>
       <div className="w-full">
         <h1 className="text-2xl text-black dark:text-white font-bold mb-4">
-          Survey
+          Survey - {surveyTitles[params.id] ?? "Unknown Event"}
         </h1>
         <p className="text-black dark:text-white mb-6 text-md">
           Please fill out this quick survey about your experience at SOUNDCLASH.
         </p>
       </div>
-      <div className="space-y-6 mb-8">
-        <h2 className="text-xl text-black dark:text-white font-bold mb-4">
-          Personal Information
-        </h2>
-        {personalInformationQuestions.map((item, index) => (
-          <div key={index}>
-            <p className="text-black dark:text-white mb-2 font-medium">
-              {item.question}{" "}
-              {item.required && <span className="text-red-500">*</span>}
-            </p>
-            <Input
-              className="bg-white"
-              placeholder="Type your answer here..."
-              onChange={(e) => handleChange(item.question, e.target.value)}
-            />
-          </div>
-        ))}
-      </div>
-      <div className="space-y-6">
-        {/* Common Questions */}
-        <h2 className="text-xl text-black dark:text-white font-bold mb-4">
-          General questions
-        </h2>
-        {commonQuestions.map((item, index) => (
-          <div key={index}>
-            <p className="text-black dark:text-white mb-2 font-medium">
-              {item.question}
-            </p>
-            {item.options ? (
-              <RadioGroup
-                name={item.question}
-                onValueChange={(value) => handleChange(item.question, value)}
-              >
-                {item.options.map((option, optionIndex) => (
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem
-                      value={option}
-                      id={`r${index}-${optionIndex}`}
-                      key={`r${index}-${optionIndex}`}
-                    />
-                    <Label htmlFor={`r${index}-${optionIndex}`}>{option}</Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            ) : (
-              <Textarea
-                className=" bg-white"
+      {page === 1 && (
+        <div className="space-y-6 mb-8">
+          <h2 className="text-xl text-black dark:text-white font-bold mb-4">
+            Personal Information
+          </h2>
+          {personalInformationQuestions.map((item, index) => (
+            <div key={index}>
+              <p className="text-black dark:text-white mb-2 font-medium">
+                {item.question}{" "}
+                {item.required && <span className="text-red-500">*</span>}
+              </p>
+              <Input
+                className="bg-white"
                 placeholder="Type your answer here..."
                 onChange={(e) => handleChange(item.question, e.target.value)}
               />
-            )}
-          </div>
-        ))}
-
-        {/* Conditional Questions based on ID */}
-        <h2 className="text-xl text-black dark:text-white font-bold mb-4">
-          Event questions
-        </h2>
-        {params.id &&
-          conditionalQuestions[params.id]?.map((item, index) => (
+            </div>
+          ))}
+          <Button onClick={() => setPage(2)}>Next</Button>
+        </div>
+      )}
+      {page === 2 && (
+        <div className="space-y-6">
+          {/* Common Questions */}
+          <h2 className="text-xl text-black dark:text-white font-bold mb-4">
+            General questions
+          </h2>
+          {commonQuestions.map((item, index) => (
             <div key={index}>
               <p className="text-black dark:text-white mb-2 font-medium">
                 {item.question}
               </p>
-
-              {item.options && (
+              {item.options ? (
                 <RadioGroup
                   name={item.question}
                   onValueChange={(value) => handleChange(item.question, value)}
@@ -650,13 +613,63 @@ export default function SurveyPage({ params }: { params: { id: string } }) {
                     </div>
                   ))}
                 </RadioGroup>
+              ) : (
+                <Textarea
+                  className=" bg-white"
+                  placeholder="Type your answer here..."
+                  onChange={(e) => handleChange(item.question, e.target.value)}
+                />
               )}
             </div>
           ))}
-        <Button onClick={handleSubmit} disabled={isSubmitDisabled || isLoading}>
-          Submit
-        </Button>
-      </div>
+
+          {/* Conditional Questions based on ID */}
+          <h2 className="text-xl text-black dark:text-white font-bold mb-4">
+            Event questions
+          </h2>
+          {params.id &&
+            conditionalQuestions[params.id]?.map((item, index) => (
+              <div key={index}>
+                <p className="text-black dark:text-white mb-2 font-medium">
+                  {item.question}
+                </p>
+
+                {item.options && (
+                  <RadioGroup
+                    name={item.question}
+                    onValueChange={(value) =>
+                      handleChange(item.question, value)
+                    }
+                  >
+                    {item.options.map((option, optionIndex) => (
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem
+                          value={option}
+                          id={`r${index}-${optionIndex}`}
+                          key={`r${index}-${optionIndex}`}
+                        />
+                        <Label htmlFor={`r${index}-${optionIndex}`}>
+                          {option}
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                )}
+              </div>
+            ))}
+          <div className="flex justify-between">
+            <Button onClick={() => setPage(1)} variant="secondary">
+              Back
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={isSubmitDisabled || isLoading}
+            >
+              Submit
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

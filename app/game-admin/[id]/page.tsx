@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/table";
 import { Emoji, Powerup, SoundclashEvent, VotingSession } from "@/app/types";
 import { cn } from "@/lib/utils";
-import DashboardTimerControl from "./DashboardTimerControl";
 
 const sendNotification = async (message: { title: string; body: string }) => {
   try {
@@ -195,6 +194,7 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
 
   const startEvent = async () => {
     setLoading(true);
+
     try {
       const { data: event } = await supabase
         .from("event_games")
@@ -210,7 +210,7 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
       }
       await sendNotification({
         title: "Get ready to rumble!",
-        body: "The event has started. Let the Soundclash begin!",
+        body: "The show has started. Let the Soundclash begin!",
       });
     } finally {
       setLoading(false);
@@ -413,6 +413,19 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
           </div>
           <div className="flex flex-col items-center w-full mt-8">
             <h3 className="text-2xl font-bold mb-4">Powerups</h3>
+            <div className="flex gap-2 mb-4">
+              {votingSessions.some(
+                (votingSession) => !votingSession.concluded
+              ) && (
+                <Button
+                  onClick={endVoting}
+                  disabled={loading}
+                  variant="destructive"
+                >
+                  End Voting
+                </Button>
+              )}
+            </div>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -459,11 +472,6 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
               </TableBody>
             </Table>
           </div>
-          {
-            activeGame && (<DashboardTimerControl activeGame={activeGame}/>)
-          }
-          
-          
         </div>
 
         <div className="flex flex-col items-center w-1/2 h-full mb-4">
