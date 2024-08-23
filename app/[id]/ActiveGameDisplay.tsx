@@ -200,6 +200,7 @@ export const ActiveGameDisplay = ({
       <VotingSection
         votingSessions={activeVotingSessions}
         lastVotedSession={lastVotedSession}
+        emojiVoteCountRemaining={emojiVoteCountRemaining}
       />
 
       {/* DJ Images and Names */}
