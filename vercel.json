@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "https://soundclash.co",
+      "permanent": true
+    }
+  ]
+}

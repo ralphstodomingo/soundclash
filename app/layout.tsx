@@ -13,8 +13,8 @@ const fontSans = FontSans({
 
 export const metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Soundclash",
-  description: "Soundclash",
+  title: "SOUNDCLASH",
+  description: "SOUNDCLASH",
 };
 
 export default function RootLayout({
