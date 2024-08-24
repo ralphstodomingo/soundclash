@@ -615,7 +615,7 @@ export default function SurveyPage({ params }: { params: { id: string } }) {
                 </RadioGroup>
               ) : (
                 <Textarea
-                  className=" bg-white"
+                  className=" bg-white text-black"
                   placeholder="Type your answer here..."
                   onChange={(e) => handleChange(item.question, e.target.value)}
                 />
