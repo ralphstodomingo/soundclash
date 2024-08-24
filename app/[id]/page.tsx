@@ -2,6 +2,7 @@ import { SoundclashEvent } from "@/app/types";
 import { createClient } from "@/utils/supabase/client";
 import ClientActiveGame from "./ClientActiveGame";
 import { notFound } from "next/navigation";
+import Head from "next/head";
 
 export const revalidate = 60; // Revalidate the page every 60 seconds
 
@@ -34,5 +35,17 @@ export default async function EventPage({
     return notFound(); // Show 404 page if data is not found
   }
 
-  return <ClientActiveGame eventId={params.id} event={event} />;
+  return (
+    <>
+      <Head>
+        <meta
+          httpEquiv="Cache-Control"
+          content="no-cache, no-store, must-revalidate"
+        />
+        <meta httpEquiv="Pragma" content="no-cache" />
+        <meta httpEquiv="Expires" content="0" />
+      </Head>
+      <ClientActiveGame eventId={params.id} event={event} />;
+    </>
+  );
 }
