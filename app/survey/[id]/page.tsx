@@ -124,24 +124,6 @@ export default function SurveyPage({ params }: { params: { id: string } }) {
         question: "How did you find using the APP?",
         options: ["Easy", "Neutral", "Hard"],
       },
-      // {
-      //   question:
-      //     "How did voting on which SOUNDCLASHER receives a Power Up using the APP affect your experience of a SOUNDCLASH?",
-      //   type: "slider",
-      //   options: [
-      //     "It made my experience less enjoyable",
-      //     "It would not affect my experience",
-      //     "It made my experience more enjoyable",
-      //   ],
-      // },
-      {
-        question: "How do you feel about there being no winner announced?",
-        options: [
-          "It made my experience less enjoyable",
-          "It would not affect my experience",
-          "It made my experience more enjoyable",
-        ],
-      },
       {
         question:
           "Should there be a winner that is announced at the end of the game?",
@@ -206,26 +188,12 @@ export default function SurveyPage({ params }: { params: { id: string } }) {
     ],
     "be937b71-7db6-4b4e-8c86-9e706a307078": [
       {
-        question:
-          "Did you prefer the SOUNDCLASHER'S entrance when they walked in or when they suddenly appeared?",
-        options: ["Walked in", "Suddenly Appeared"],
-      },
-      {
         question: "How did you find using the APP?",
         options: ["Easy", "Neutral", "Hard"],
       },
       {
         question:
           "How did voting for a winner in the first game using the APP affect your experience of a SOUNDCLASH?",
-        options: [
-          "It made my experience less enjoyable",
-          "It did not affect my experience",
-          "It made my experience more enjoyable",
-        ],
-      },
-      {
-        question:
-          "How do you feel about there being no winner announced in the second game?",
         options: [
           "It made my experience less enjoyable",
           "It did not affect my experience",
@@ -336,31 +304,8 @@ export default function SurveyPage({ params }: { params: { id: string } }) {
         type: "slider",
         options: ["1", "2", "3", "4", "5"],
       },
-      {
-        question:
-          "How do you feel about watching SOUNDCLASHERS being interviewed after the game ends?",
-        options: [
-          "It made my experience less enjoyable",
-          "It did not affect my experience",
-          "It made my experience more enjoyable",
-        ],
-      },
     ],
     "91c1eb0c-1741-47d8-9e5b-f5422a00a34a": [
-      {
-        question:
-          "Did you prefer the SOUNDCLASHER'S entrance when they walked in or when they suddenly appeared?",
-        options: ["Walked in", "Suddenly Appeared"],
-      },
-      {
-        question:
-          "How did voting for a winner based on yours and the crowd's reaction affect your experience of a SOUNDCLASH?",
-        options: [
-          "It made my experience less enjoyable",
-          "It did not affect my experience",
-          "It made my experience more enjoyable",
-        ],
-      },
       {
         question:
           "How do you feel about voting for a winner at the end of a game using a mobile APP?",
@@ -429,10 +374,6 @@ export default function SurveyPage({ params }: { params: { id: string } }) {
         ],
       },
       {
-        question: "Do you prefer there being a voiceover or a presenter?",
-        options: ["Voiceover", "Presenter"],
-      },
-      {
         question:
           "On a scale of 1 (being bad) to 5 (being excellent), how would you rate the lighting and visual experience of the first game?",
         type: "slider",
@@ -467,15 +408,6 @@ export default function SurveyPage({ params }: { params: { id: string } }) {
           "On a scale of 1 (being bad) to 5 (being excellent), how would you rate your overall enjoyment of the second game?",
         type: "slider",
         options: ["1", "2", "3", "4", "5"],
-      },
-      {
-        question:
-          "How do you feel about watching SOUNDCLASHERS being interviewed after a game ends?",
-        options: [
-          "It made my experience less enjoyable",
-          "It did not affect my experience",
-          "It made my experience more enjoyable",
-        ],
       },
       {
         question: "How do you feel about the length of the overall event?",
