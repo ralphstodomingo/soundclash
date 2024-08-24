@@ -3,6 +3,8 @@ import { createClient } from "@/utils/supabase/client";
 import ClientActiveGame from "./ClientActiveGame";
 import { notFound } from "next/navigation";
 
+export const revalidate = 60; // Revalidate the page every 60 seconds
+
 export default async function EventPage({
   params,
 }: {
