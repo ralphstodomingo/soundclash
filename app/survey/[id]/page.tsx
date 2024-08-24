@@ -148,9 +148,9 @@ export default function SurveyPage({ params }: { params: { id: string } }) {
         options: ["Yes", "No"],
       },
       {
-        question: "How do you feel about the half-time length?",
+        question: "How do you feel about the intermission length?",
         options: [
-          "I did not like that there was a Half-Time",
+          "I did not like that there was an intermission",
           "Too Short",
           "Just Right",
           "Too Long",
@@ -270,9 +270,9 @@ export default function SurveyPage({ params }: { params: { id: string } }) {
       },
       {
         question:
-          "How do you feel about the half-time length in the second game?",
+          "How do you feel about the intermission length in the second game?",
         options: [
-          "I did not like that there was a Half-Time",
+          "I did not like that there was an intermission",
           "Too Short",
           "Just Right",
           "Too Long",
