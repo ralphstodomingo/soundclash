@@ -1,0 +1,19 @@
+{
+  "redirects": [
+    {
+      "source": "/game-admin/1",
+      "destination": "/game-admin/5a827b3c-9d16-49ae-9ce2-bdabaf18b58d",
+      "permanent": true
+    },
+    {
+      "source": "/game-admin/2",
+      "destination": "/game-admin/be937b71-7db6-4b4e-8c86-9e706a307078",
+      "permanent": true
+    },
+    {
+      "source": "/game-admin/3",
+      "destination": "/game-admin/91c1eb0c-1741-47d8-9e5b-f5422a00a34a",
+      "permanent": true
+    }
+  ]
+}
