@@ -575,7 +575,7 @@ export default function SurveyPage({ params }: { params: { id: string } }) {
                 {item.required && <span className="text-red-500">*</span>}
               </p>
               <Input
-                className="bg-white"
+                className="bg-white text-black"
                 placeholder="Type your answer here..."
                 onChange={(e) => handleChange(item.question, e.target.value)}
               />
