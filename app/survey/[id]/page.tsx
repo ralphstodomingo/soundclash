@@ -124,16 +124,16 @@ export default function SurveyPage({ params }: { params: { id: string } }) {
         question: "How did you find using the APP?",
         options: ["Easy", "Neutral", "Hard"],
       },
-      {
-        question:
-          "How did voting on which SOUNDCLASHER receives a Power Up using the APP affect your experience of a SOUNDCLASH?",
-        type: "slider",
-        options: [
-          "It made my experience less enjoyable",
-          "It would not affect my experience",
-          "It made my experience more enjoyable",
-        ],
-      },
+      // {
+      //   question:
+      //     "How did voting on which SOUNDCLASHER receives a Power Up using the APP affect your experience of a SOUNDCLASH?",
+      //   type: "slider",
+      //   options: [
+      //     "It made my experience less enjoyable",
+      //     "It would not affect my experience",
+      //     "It made my experience more enjoyable",
+      //   ],
+      // },
       {
         question: "How do you feel about there being no winner announced?",
         options: [
