@@ -93,7 +93,7 @@ export default function TimerPage({
             {/* DJ 1 Timer */}
             <div
               className={cn(
-                "flex flex-col items-center justify-center bg-gray-200 dark:bg-gray-700 p-8 rounded-md",
+                "flex flex-col items-center justify-center bg-zinc-200 dark:bg-zinc-700 p-8 rounded-md",
                 "w-full h-3/4 lg:h-full lg:w-2/3"
               )}
             >
@@ -106,7 +106,7 @@ export default function TimerPage({
             {/* DJ 2 Timer */}
             <div
               className={cn(
-                "flex flex-col items-center justify-center bg-gray-200 dark:bg-gray-700 p-8 rounded-md",
+                "flex flex-col items-center justify-center bg-zinc-200 dark:bg-zinc-700 p-8 rounded-md",
                 "w-full h-1/4 lg:h-full lg:w-1/3"
               )}
             >
@@ -121,7 +121,7 @@ export default function TimerPage({
             {/* DJ 2 Timer */}
             <div
               className={cn(
-                "flex flex-col items-center justify-center bg-gray-200 dark:bg-gray-700 p-8 rounded-md",
+                "flex flex-col items-center justify-center bg-zinc-200 dark:bg-zinc-700 p-8 rounded-md",
                 "w-full h-3/4 lg:h-full lg:w-2/3"
               )}
             >
@@ -134,7 +134,7 @@ export default function TimerPage({
             {/* DJ 1 Timer */}
             <div
               className={cn(
-                "flex flex-col items-center justify-center bg-gray-200 dark:bg-gray-700 p-8 rounded-md",
+                "flex flex-col items-center justify-center bg-zinc-200 dark:bg-zinc-700 p-8 rounded-md",
                 "w-full h-1/4 lg:h-full lg:w-1/3"
               )}
             >

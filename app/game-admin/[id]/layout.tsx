@@ -1,6 +1,6 @@
 import { Inter as FontSans } from "next/font/google";
 import { cn } from "@/lib/utils";
-import "./globals.css";
+import "../../globals.css";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -26,7 +26,7 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={cn(
-          "min-h-screen font-sans bg-background antialiased dark",
+          "min-h-screen font-sans bg-background antialiased",
           fontSans.variable
         )}
       >

@@ -103,7 +103,7 @@ const ClientActiveGame = ({ eventId, event }: Props) => {
   }, []);
 
   return (
-    <div>
+    <div className="dark">
       {activeGame ? (
         <ActiveGameDisplay
           event={event}

@@ -19,11 +19,12 @@ export default function TimerPage({
   const supabase = createClient();
   const [activeGame, setActiveGame] = useState<string | null>(null);
   const [event, setEvent] = useState<SoundclashEvent | null>(null);
-  const [remainingTime, setRemainingTime] = useState("00:00");
+  const [remainingTime, setRemainingTime] = useState(0);
   const [isDJ1Turn, setIsDJ1Turn] = useState(true);
   const [dj1TurnCount, setDj1TurnCount] = useState(0);
   const [dj2TurnCount, setDj2TurnCount] = useState(0);
-  const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
+  const [endTime, setEndTime] = useState<number | null>(null);
+  const [gameFinished, setGameFinished] = useState(false);
 
   const config = {
     "5a827b3c-9d16-49ae-9ce2-bdabaf18b58d": {
@@ -99,6 +100,7 @@ export default function TimerPage({
       ],
     },
   };
+  
   const currentGameConfig = config[params.eventId]?.games.find(
     (game) => game.id === activeGame
   );
@@ -132,6 +134,8 @@ export default function TimerPage({
         setActiveGame(data.active_game);
         setDj1TurnCount(0);
         setDj2TurnCount(0);
+        setIsDJ1Turn(true); // Ensure we start with DJ1's turn
+        setGameFinished(false); // Reset game finished state
       }
     };
 
@@ -154,7 +158,8 @@ export default function TimerPage({
             setActiveGame(updatedActiveGame);
             setDj1TurnCount(0);
             setDj2TurnCount(0);
-            setIsDJ1Turn(true);
+            setIsDJ1Turn(true); // Reset to DJ1's turn
+            setGameFinished(false); // Reset game finished state
           }
         }
       )
@@ -166,52 +171,61 @@ export default function TimerPage({
   }, [params.eventId]);
 
   useEffect(() => {
-    if (!currentGameConfig || !activeGame) return;
+    if (!currentGameConfig || !activeGame || gameFinished) return;
 
-    if (dj1TurnCount >= currentGameConfig.totalTurns / 2 && dj2TurnCount >= currentGameConfig.totalTurns / 2) {
-      clearInterval(intervalId!);
-      return;
-    }
+    let interval: NodeJS.Timeout;
 
-    const turnLengthInSeconds = Array.isArray(currentGameConfig.turnLength)
+    const currentTurnLength = Array.isArray(currentGameConfig.turnLength)
       ? currentGameConfig.turnLength[isDJ1Turn ? dj1TurnCount : dj2TurnCount]
       : currentGameConfig.turnLength;
 
-    const startTime = new Date();
-    const endTime = startTime.getTime() + turnLengthInSeconds * 1000;
+    if (!endTime) {
+      const calculatedEndTime = Date.now() + currentTurnLength * 1000;
+      setEndTime(calculatedEndTime);
+    }
 
-    const newIntervalId = setInterval(() => {
-      const now = new Date();
-      const timeLeft = Math.max(0, endTime - now.getTime());
+    const updateTimer = () => {
+      if (!endTime) return;
+
+      const now = Date.now();
+      const timeLeft = Math.max(0, endTime - now);
 
       if (timeLeft <= 0) {
-        clearInterval(newIntervalId);
-        setIntervalId(null);
+        clearInterval(interval);
 
         if (isDJ1Turn) {
+          if (dj1TurnCount + 1 >= currentGameConfig.totalTurns / 2) {
+            setGameFinished(true);
+            return;
+          }
           setDj1TurnCount((prev) => prev + 1);
+          setIsDJ1Turn(false); // Switch to DJ2
         } else {
+          if (dj2TurnCount + 1 >= currentGameConfig.totalTurns / 2) {
+            setGameFinished(true);
+            return;
+          }
           setDj2TurnCount((prev) => prev + 1);
+          setIsDJ1Turn(true); // Switch back to DJ1
         }
 
-        setIsDJ1Turn((prev) => !prev);
+        setEndTime(null); // Reset the endTime for the next turn
       } else {
-        const minutes = Math.floor(timeLeft / 60000);
-        const seconds = Math.floor((timeLeft % 60000) / 1000);
-        setRemainingTime(
-          `${minutes.toString().padStart(2, "0")}:${seconds
-            .toString()
-            .padStart(2, "0")}`
-        );
+        setRemainingTime(timeLeft);
       }
-    }, 1000);
-
-    setIntervalId(newIntervalId);
-
-    return () => {
-      if (intervalId) clearInterval(intervalId);
     };
-  }, [activeGame, isDJ1Turn, dj1TurnCount, dj2TurnCount]);
+
+    interval = setInterval(updateTimer, 1000);
+    updateTimer(); // Run initially to avoid a 1s delay
+
+    return () => clearInterval(interval);
+  }, [activeGame, dj1TurnCount, dj2TurnCount, currentGameConfig, isDJ1Turn, endTime, gameFinished]);
+
+  const formattedTime = `${Math.floor(remainingTime / 60000)
+    .toString()
+    .padStart(2, "0")}:${Math.floor((remainingTime % 60000) / 1000)
+    .toString()
+    .padStart(2, "0")}`;
 
   if (!currentGameConfig) {
     return (
@@ -223,8 +237,18 @@ export default function TimerPage({
     );
   }
 
+  if (gameFinished) {
+    return (
+      <div className="flex justify-center items-center w-full h-screen">
+        <p className="text-xl text-gray-700 dark:text-gray-300">
+          Game finished.
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col justify-center items-center w-full h-screen p-4 space-y-4 bg-gray-100 dark:bg-gray-900">
+    <div className="flex flex-col justify-center items-center w-full h-screen p-4 space-y-4 bg-zinc-100 dark:bg-zinc-900">
       <div className="text-2xl font-bold text-gray-800 dark:text-gray-200">
         {currentGameConfig.soundclashers[0]} vs{" "}
         {currentGameConfig.soundclashers[1]}
@@ -233,7 +257,7 @@ export default function TimerPage({
       <div className="flex flex-col lg:flex-row justify-between w-full h-full space-y-4 lg:space-y-0 lg:space-x-4">
         <div
           className={cn(
-            "flex flex-col items-center justify-center bg-white dark:bg-gray-700 p-8 rounded-md shadow-lg",
+            "flex flex-col items-center justify-center bg-white dark:bg-zinc-700 p-8 rounded-md shadow-lg",
             "w-full lg:w-1/2 h-1/2"
           )}
         >
@@ -241,7 +265,7 @@ export default function TimerPage({
             {currentGameConfig.soundclashers[0]}'s Timer
           </div>
           <div className="text-8xl lg:text-9xl font-bold text-green-500">
-            {isDJ1Turn ? remainingTime : "00:00"}
+            {isDJ1Turn ? formattedTime : "00:00"}
           </div>
           <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">
             Turn {dj1TurnCount + 1} / {currentGameConfig.totalTurns / 2}
@@ -250,7 +274,7 @@ export default function TimerPage({
 
         <div
           className={cn(
-            "flex flex-col items-center justify-center bg-white dark:bg-gray-700 p-8 rounded-md shadow-lg",
+            "flex flex-col items-center justify-center bg-white dark:bg-zinc-700 p-8 rounded-md shadow-lg",
             "w-full lg:w-1/2 h-1/2"
           )}
         >
@@ -258,7 +282,7 @@ export default function TimerPage({
             {currentGameConfig.soundclashers[1]}'s Timer
           </div>
           <div className="text-8xl lg:text-9xl font-bold text-green-500">
-            {!isDJ1Turn ? remainingTime : "00:00"}
+            {!isDJ1Turn ? formattedTime : "00:00"}
           </div>
           <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">
             Turn {dj2TurnCount + 1} / {currentGameConfig.totalTurns / 2}

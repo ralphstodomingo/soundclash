@@ -36,7 +36,7 @@ const VotingSection = ({
 
   if (votingSessions.length && lastVotedSession === votingSessions[0].id) {
     return (
-      <div className="w-full bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 h-1/5 flex flex-col justify-center">
+      <div className="w-full bg-white dark:bg-zinc-800 rounded-lg shadow-md p-6 h-1/5 flex flex-col justify-center">
         <p className="text-gray-600 dark:text-gray-400 text-center font-bold text-xl">
           Your vote has been cast!
         </p>
@@ -46,7 +46,7 @@ const VotingSection = ({
 
   if (!votingSessions.length || lastVotedSession === votingSessions[0].id) {
     return (
-      <div className="w-full bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 h-1/5 flex flex-col justify-center">
+      <div className="w-full bg-white dark:bg-zinc-800 rounded-lg shadow-md p-6 h-1/5 flex flex-col justify-center">
         <p className="text-gray-600 dark:text-gray-400 text-center font-bold text-xl">
           Standby for the next voting session!
         </p>
@@ -55,7 +55,7 @@ const VotingSection = ({
   }
 
   return (
-    <div className="w-full bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 h-1/5 flex flex-col justify-center">
+    <div className="w-full bg-white dark:bg-zinc-800 rounded-lg shadow-md p-6 h-1/5 flex flex-col justify-center">
       {votingSessions[0].winner && (
         <p className="text-gray-600 dark:text-gray-400 text-center font-bold text-xl">
           Click on the SOUNDCLASHER you want to win!

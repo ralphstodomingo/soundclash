@@ -1,6 +1,6 @@
 import { SoundclashEvent } from "@/app/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import logoSrc from "@/app/logo.png";
+import logoSrc from "@/app/logo-white.png";
 import Image from "next/image";
 
 interface Props {
@@ -11,7 +11,7 @@ export const EventOverview = ({ event }: Props) => {
   return (
     <div className="container mx-auto p-4 pt-8">
       <Image
-        className="w-full max-h-48 object-cover rounded-md mb-4"
+        className="w-full max-h-48 object-cover rounded-md mb-4 filter-invert"
         src={logoSrc}
         alt="Soundclash"
       />

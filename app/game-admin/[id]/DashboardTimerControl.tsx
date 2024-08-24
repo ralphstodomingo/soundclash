@@ -99,14 +99,14 @@ const DashboardTimerControl = ({ activeGame }: DashboardTimerControlProps) => {
         <Label className="text-gray-700 dark:text-gray-300">Set Time:</Label>
         <Input
           type="number"
-          className="w-16 p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-gray-100"
+          className="w-16 p-2 border border-gray-300 rounded-md dark:bg-zinc-800 dark:text-gray-100"
           placeholder="Minutes"
           value={minutesToAdd}
           onChange={(e) => setMinutesToAdd(Number(e.target.value))}
         />
         <Input
           type="number"
-          className="w-16 p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-gray-100"
+          className="w-16 p-2 border border-gray-300 rounded-md dark:bg-zinc-800 dark:text-gray-100"
           placeholder="Seconds"
           value={secondsToAdd}
           onChange={(e) => setSecondsToAdd(Number(e.target.value))}
@@ -131,13 +131,13 @@ const DashboardTimerControl = ({ activeGame }: DashboardTimerControlProps) => {
 
       {/* Timers Display */}
       <div className="flex space-x-8 mt-4">
-        <div className="flex flex-col items-center bg-gray-200 dark:bg-gray-700 p-8 rounded-md">
+        <div className="flex flex-col items-center bg-zinc-200 dark:bg-zinc-700 p-8 rounded-md">
           <div className="text-lg text-gray-800 dark:text-gray-200 mb-2">
             DJ 1 Timer
           </div>
           <div className="text-6xl">{dj1Remaining}</div>
         </div>
-        <div className="flex flex-col items-center bg-gray-200 dark:bg-gray-700 p-8 rounded-md">
+        <div className="flex flex-col items-center bg-zinc-200 dark:bg-zinc-700 p-8 rounded-md">
           <div className="text-lg text-gray-800 dark:text-gray-200 mb-2">
             DJ 2 Timer
           </div>

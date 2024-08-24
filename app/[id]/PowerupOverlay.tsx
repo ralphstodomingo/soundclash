@@ -10,7 +10,7 @@ const PowerupOverlay = ({ powerup }: PowerupOverlayProps) => {
   }
 
   return (
-      <div className="flex bg-white dark:bg-gray-800 w-full mt-4">
+      <div className="flex bg-white dark:bg-zinc-800 w-full mt-4">
         <img
           src={powerup.image}
           alt={powerup.name}

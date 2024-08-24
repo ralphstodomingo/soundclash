@@ -333,7 +333,7 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
   };
 
   return (
-    <div className="p-6 w-full bg-white">
+    <div className="p-6 w-full bg-white light">
       <h1 className="text-2xl font-bold mb-6">Event Dashboard</h1>
       <div className="space-y-4 mb-8">
         <Button onClick={startEvent} disabled={loading || Boolean(activeGame)}>

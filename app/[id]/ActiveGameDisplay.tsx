@@ -1,5 +1,5 @@
 "use client";
-import logoSrc from "@/app/logo.png";
+import logoSrc from "@/app/logo-white.png";
 import { Emoji, SoundclashEvent, VotingSession } from "@/app/types";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/utils/supabase/client";
@@ -186,11 +186,11 @@ export const ActiveGameDisplay = ({
   }
 
   return (
-    <div className="flex flex-col items-center justify-between h-screen bg-gray-100 dark:bg-gray-900 max-w-[600px] px-4 pb-8">
+    <div className="flex flex-col items-center justify-between h-screen bg-zinc-100 dark:bg-zinc-900 max-w-[600px] px-4 pb-8">
       {/* Logo at the Top */}
       <div className="w-full">
         <Image
-          className="w-full max-h-48 object-cover rounded-md mb-4"
+          className="w-full max-h-48 object-cover rounded-md mb-4 filter-invert"
           src={logoSrc}
           alt="Soundclash"
         />
@@ -209,7 +209,7 @@ export const ActiveGameDisplay = ({
           {/* DJ 1 */}
           <div
             className={cn(
-              "relative flex flex-col items-center w-1/2 h-full p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border-2 border-white",
+              "relative flex flex-col items-center w-1/2 h-full p-2 bg-white rounded-lg shadow-lg border-2 border-white",
               {
                 "animate-pulse duration-300": isDJ1Animating,
                 "border-4 border-green-500": lastVotedDJ === 1,
@@ -227,7 +227,7 @@ export const ActiveGameDisplay = ({
                   lastVotedSession === activeVotingSessions[0].id,
               })}
             />
-            <p className="my-4 text-xl font-semibold text-gray-800 dark:text-gray-200">
+            <p className="my-4 text-xl font-semibold text-gray-800">
               {activeGameDetails?.dj_1_id.name}
             </p>
             <EmojiOverlay
@@ -242,7 +242,7 @@ export const ActiveGameDisplay = ({
           {/* DJ 2 */}
           <div
             className={cn(
-              "relative flex flex-col items-center w-1/2 h-full p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border-2 border-white",
+              "relative flex flex-col items-center w-1/2 h-full p-2 bg-white rounded-lg shadow-lg border-2 border-white",
               {
                 "animate-pulse duration-300": isDJ2Animating,
                 "border-4 border-green-500": lastVotedDJ === 2,
@@ -260,7 +260,7 @@ export const ActiveGameDisplay = ({
                   lastVotedSession === activeVotingSessions[0].id,
               })}
             />
-            <p className="my-4 text-xl font-semibold text-gray-800 dark:text-gray-200">
+            <p className="my-4 text-xl font-semibold text-gray-800">
               {activeGameDetails?.dj_2_id.name}
             </p>
             <EmojiOverlay
