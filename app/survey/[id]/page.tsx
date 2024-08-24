@@ -1,6 +1,6 @@
 "use client";
 
-import logoSrc from "@/app/logo.png";
+import logoSrc from "@/app/logo-white.png";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -546,11 +546,11 @@ export default function SurveyPage({ params }: { params: { id: string } }) {
   };
 
   return (
-    <div className="flex flex-col items-center justify-between bg-gray-100 dark:bg-gray-900 max-w-[600px] mx-auto p-8">
+    <div className="flex flex-col items-center justify-between bg-black max-w-[600px] mx-auto p-8 dark">
       {/* Logo at the Top */}
       <div className="w-full">
         <Image
-          className="w-full max-h-48 object-cover rounded-md mb-4"
+          className="w-full max-h-48 object-cover rounded-md mb-4 filter-invert"
           src={logoSrc}
           alt="Soundclash"
         />
@@ -607,7 +607,7 @@ export default function SurveyPage({ params }: { params: { id: string } }) {
                         id={`r${index}-${optionIndex}`}
                         key={`r${index}-${optionIndex}`}
                       />
-                      <Label htmlFor={`r${index}-${optionIndex}`}>
+                      <Label htmlFor={`r${index}-${optionIndex}`} className="text-white">
                         {option}
                       </Label>
                     </div>
@@ -648,7 +648,7 @@ export default function SurveyPage({ params }: { params: { id: string } }) {
                           id={`r${index}-${optionIndex}`}
                           key={`r${index}-${optionIndex}`}
                         />
-                        <Label htmlFor={`r${index}-${optionIndex}`}>
+                        <Label htmlFor={`r${index}-${optionIndex}`} className="text-white">
                           {option}
                         </Label>
                       </div>
@@ -658,7 +658,7 @@ export default function SurveyPage({ params }: { params: { id: string } }) {
               </div>
             ))}
           <div className="flex justify-between">
-            <Button onClick={() => setPage(1)} variant="secondary">
+            <Button onClick={() => setPage(1)}>
               Back
             </Button>
             <Button
